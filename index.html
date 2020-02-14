@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Tra cứu tài khoản</title>
+    <link rel="stylesheet" href="assets/style.css">
+</head>
+
+<body>
+    <div class="div-login" id="div_login">
+        <div class="div-login-username-password">
+            <div class="div-login-username-password-upper">
+                <span>Tên đăng nhập</span>
+            </div>
+            <div class="div-login-username-password-below">
+                <input type="text" id="username" placeholder="Nhập vào tên đăng nhập">
+            </div>
+        </div>
+
+        <div class="div-login-username-password">
+            <div class="div-login-username-password-upper">
+                <span>Mật khẩu</span>
+            </div>
+            <div class="div-login-username-password-below">
+                <input type="password" id="password" placeholder="Nhập vào mật khẩu">
+            </div>
+        </div>
+
+        <div class="div-login-button-submit" onclick="submit()">
+            <span>Đăng nhập</span>
+        </div>
+        <h4 id="error_text">123</h4>
+    </div>
+
+    <div class="div-login" id="div-login-success">
+        <div class="div-login-success-contain">
+            <h4 id="success_login_text">Đăng nhập thành công ...</h4>
+        </div>
+    </div>
+
+    <div class="div-login" id="div-craw">
+        <div class="div-login-crawl">
+            <div class="div-login-button-submit" onclick="crawl()">
+                <span>Tra cứu thông tin</span>
+            </div>
+            <div class="div-login-loading" id="div_login_loading"></div>
+            <div class="div-progress-bar" id="div_progress_bar">
+                <div id="div_grey"></div>
+            </div>
+            <h4 id="success_text"></h4>
+            <h4 id="error_crawl"></h4>
+        </div>
+    </div>
+
+    <script>
+        var USERNAME = ['root', 'admin'];
+        var PASSWORD = ['abc13579', 'abc13579'];
+
+        const electron = require('electron');
+        const { ipcRenderer } = electron;
+
+        var crawling = false;
+
+        ipcRenderer.on("crawl:error_choose_not_txt", (e, item) => {
+            if (item) {
+                document.getElementById("div_login_loading").style.display = 'none';
+                document.getElementById("div_progress_bar").style.display = 'none';
+                document.getElementById("error_crawl").innerHTML = "File danh sách số điện thoại cần phải là file .txt";
+                document.getElementById("error_crawl").style.display = 'block';
+                document.getElementById("error_text").innerHTML = "File danh sách số điện thoại cần phải là file .txt";
+                document.getElementById("error_text").style.display = 'block';
+            } else  {
+                document.getElementById("div_login_loading").style.display = 'none';
+                document.getElementById("div_progress_bar").style.display = 'none';
+                document.getElementById("error_crawl").style.display = 'none';
+                document.getElementById("error_text").style.display = 'none';
+            } 
+        });
+
+        ipcRenderer.on("crawl:error_choose_not_chrome", (e, item) => {
+            if (item) {
+                document.getElementById("div_login_loading").style.display = 'none';
+                document.getElementById("div_progress_bar").style.display = 'none';
+                document.getElementById("error_crawl").innerHTML = "File danh sáhc số điện thoại cần phải là file .txt";
+                document.getElementById("error_crawl").style.display = 'block';
+                document.getElementById("error_text").innerHTML = "File danh sách số điện thoại cần phải là file .txt";
+                document.getElementById("error_text").style.display = 'block';
+            } else {
+                document.getElementById("div_login_loading").style.display = 'none';
+                document.getElementById("div_progress_bar").style.display = 'none';
+                document.getElementById("error_crawl").style.display = 'none';
+                document.getElementById("error_text").style.display = 'none';
+            }
+        });
+
+        ipcRenderer.on("crawl:result", (e, item) => {
+            if (item) {
+                document.getElementById("div_login_loading").style.display = 'none';
+                document.getElementById("div_progress_bar").style.display = 'none';
+                document.getElementById("success_text").innerHTML = "Truy xuất dữ liệu thành công";
+                document.getElementById("success_text").style.display = 'block';
+                crawling = false;
+            } else {
+                document.getElementById("div_login_loading").style.display = 'none';
+                document.getElementById("div_progress_bar").style.display = 'none';
+                document.getElementById("error_crawl").innerHTML = "Truy xuất dữ liệu không thành công";
+                document.getElementById("error_crawl").style.display = 'block';
+                crawling = false;
+            }
+        });
+
+        ipcRenderer.on("crawl:read_error", (e, item) => {
+            if (item) {
+                document.getElementById("div_login_loading").style.display = 'none';
+                document.getElementById("div_progress_bar").style.display = 'none';
+                document.getElementById("error_crawl").innerHTML = `Lỗi đọc file,cần chọn file txt,bấm tổ hợp crt + f để chọn file`;
+                document.getElementById("error_crawl").style.display = 'block';
+                //crawling = false;
+            } else {
+                document.getElementById("div_login_loading").style.display = 'none';
+                document.getElementById("div_progress_bar").style.display = 'none';
+                document.getElementById("error_crawl").innerHTML = "File danhsach.txt chưa có số điện thoại nào";
+                document.getElementById("error_crawl").style.display = 'block';
+               // crawling = false;
+            }
+        });
+
+        ipcRenderer.on("crawl:network_error", (e, item) => {
+            if (item) {
+                document.getElementById("div_login_loading").style.display = 'none';
+                document.getElementById("div_progress_bar").style.display = 'none';
+                document.getElementById("error_crawl").innerHTML = "Lỗi mạng,vui lòng thử lại";
+                document.getElementById("error_crawl").style.display = 'block';
+                crawling = false;
+            } else {
+                document.getElementById("div_login_loading").style.display = 'none';
+                document.getElementById("div_progress_bar").style.display = 'none';
+                document.getElementById("error_crawl").innerHTML = "Lỗi mạng,vui lòng thử lại";
+                document.getElementById("error_crawl").style.display = 'block';
+                crawling = false;
+            }
+        });
+
+        ipcRenderer.on("crawl:incorrect_number", (e, item) => {
+            console.log(item);
+            if (item) {
+                document.getElementById("div_login_loading").style.display = 'none';
+                document.getElementById("div_progress_bar").style.display = 'none';
+                document.getElementById("error_crawl").innerHTML = "Số điện thoại " + item + "  không đúng! Vui lòng chọn thử lại";
+                document.getElementById("error_crawl").style.display = 'block';
+                crawling = false;
+            }
+        });
+        
+        ipcRenderer.on("crawl:onrunning", (e, item) => {
+            console.log(item);
+            let tItem = item.split(" ");
+            let tResult = Number.parseFloat(tItem[0]) / Number.parseFloat(tItem[1])*100 ;
+            document.getElementById("div_grey").style.width = tResult+"%";
+            
+        });
+
+        function submit() {
+            document.getElementById("error_text").style.display = 'none';
+            let user = document.getElementById("username").value;
+            let pass = document.getElementById("password").value;
+            if (!user) {
+                document.getElementById("username").focus();
+                document.getElementById("error_text").innerHTML = "Cần nhập tên đăng nhập";
+                document.getElementById("error_text").style.display = 'block';
+            } else if (!pass) {
+                document.getElementById("password").focus();
+                document.getElementById("error_text").innerHTML = "Cần nhập mật khẩu";
+                document.getElementById("error_text").style.display = 'block';
+            } else {
+                USERNAME.map((element, index) => {
+                    if (element == user) {
+                        PASSWORD.map((element, index) => {
+                            if (element == pass) {
+                                loginSuccess();
+                            } else {
+                                document.getElementById("error_text").innerHTML = "Sai tên đăng nhập hoặc mật khẩu";
+                                document.getElementById("error_text").style.display = 'block';
+                            }
+                        });
+                    } else {
+                        document.getElementById("error_text").innerHTML = "Sai tên đăng nhập hoặc mật khẩu";
+                        document.getElementById("error_text").style.display = 'block';
+                    }
+                });
+
+            }
+        }
+
+        function loginSuccess() {
+            document.getElementById("div_login").style.display = 'none';
+            document.getElementById("error_text").style.display = 'none';
+            document.getElementById("div-login-success").style.display = 'block';
+            setTimeout(() => {
+                document.getElementById("div-craw").style.display = 'block';
+                document.getElementById("div-login-success").style.display = 'none';
+            }, 800)
+        }
+
+        function crawl() {
+            document.getElementById("error_crawl").style.display = 'none';
+            document.getElementById("success_text").style.display = 'none';
+            if (!crawling) {
+                document.getElementById("div_login_loading").style.display = 'block';
+                document.getElementById("div_progress_bar").style.display = 'block';
+                document.getElementById("div_grey").style.width = "0%";
+                ipcRenderer.send('crawl:do', true);
+                crawling = true;
+            } else {
+               
+            }
+        }
+    </script>
+</body>
+
+</html>
