@@ -163,17 +163,17 @@
         ipcRenderer.on("crawl:incorrect_number", (e, item) => {
             console.log(item);
             if (item) {
-                document.getElementById("div_login_loading").style.display = 'none';
-                document.getElementById("div_progress_bar").style.display = 'none';
-                document.getElementById("success_text").style.display = 'none';
-                document.getElementById("error_crawl").innerHTML = "Số điện thoại " + item + "  không đúng! Vui lòng chọn thử lại";
+                // document.getElementById("div_login_loading").style.display = 'none';
+                // document.getElementById("div_progress_bar").style.display = 'none';
+                // document.getElementById("success_text").style.display = 'none';
+                document.getElementById("error_crawl").innerHTML = "Số điện thoại " + item + "  không đúng! Chương trình sẽ không tra cứu số điện thoại này";
                 document.getElementById("error_crawl").style.display = 'block';
                 crawling = false;
             }
         });
         
         ipcRenderer.on("crawl:onrunning", (e, item) => {
-            console.log(item);
+            document.getElementById("error_crawl").style.display = 'none';
             let tItem = item.split(" ");
             let tResult = Math.round(Number.parseFloat(tItem[0]) / Number.parseFloat(tItem[1])*100  * 100) / 100;
             document.getElementById("div_grey").style.width = tResult+"%";
