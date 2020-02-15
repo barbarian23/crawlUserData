@@ -17,6 +17,9 @@ var directionToSource = "";
 var limitRequest = 15;
 var currentMegre = 0;
 var noService = "Thuê bao này hiện không sử dụng dịch vụ nào";
+var wrongNumber = "Số điện thoại này bị sai";
+var cIII = 0;
+var startStartIndex = 0;
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -149,8 +152,7 @@ function readFile() {
         } else {
             let arraySourceFileName = directionToSource.split("\\");
             fileNametxt = arraySourceFileName[arraySourceFileName.length - 1];
-            fileNametxt = fileNametxt.replace('.txt','');
-            console.log(fileNametxt);
+            fileNametxt = fileNametxt.replace('.txt', '');
             let tResult = data.split("\n");
             inputPhoneNumberArray = [];
             tResult.forEach(element => {
@@ -166,7 +168,7 @@ function readFile() {
             ws.column(3).setWidth(25);
             ws.column(4).setWidth(25);
             ws.column(5).setWidth(20);
-            ws.column(6).setWidth(25);
+            ws.column(6).setWidth(28);
             ws.column(7).setWidth(20);
             ws.column(8).setWidth(20);
             ws.column(9).setWidth(20);
@@ -201,6 +203,21 @@ function readFile() {
 
             await mainWindow.webContents.send('crawl:read_sucess', true);
 
+            var header = ["STT", "Họ và tên", "Số điện thoại", "Loại thuê bao", "Tỉnh/Thành phố", "Số tiền trong tài khoản chính", "Dịch vụ đăng ký trên hệ thống VC", "STT", "DỊCH VỤ", "Gói cước", "Giá cước", "Mổ tả chung", "Đối tượng"];
+            currentMegre = 0;
+
+            for (let i = 0; i < header.length; i++) {
+                if (i <= 5) {
+                    writeToXcellMerge(1, Number.parseInt(i) + 1, 2, Number.parseInt(i) + 1, header[i]);
+                }
+                else if (i == 6) {
+                    writeToXcellMerge(1, 7, 1, 12, header[i]);
+                }
+                else {
+                    writeToXcell(2, Number.parseInt(i), header[i]);
+                }
+            }
+
             await doCrawl();
         }
     });
@@ -211,49 +228,44 @@ function writeToXcell(x, y, title) {
     //     ws.cell(x, y).string(title).style(xlStyleSmall);
     // } else {
     //console.log("Ghi vao o ", x, y, "gia tri", title);
-    if ( y > 10){
-        ws.cell(x, y).string(title).style(xlStyleBig);
+    if (y > 10) {
+        ws.cell(x, y).string(title).style(xlStyleBig);//.comment({height: '50pt'});
     } else {
-        ws.cell(x, y).string(title).style(xlStyleSmall);
+        ws.cell(x, y).string(title).style(xlStyleSmall);//.comment({height: '50pt'});
     }
     // }
 }
 
 function writeToXcellMerge(x1, y1, x2, y2, title) {
     //console.log("merge", x1, y1, "to", x2, y2);
-    if (title == noService){
-        ws.cell(x1, y1, x2, y2, true).string(title).style(xlStyleBig);
+    if (title == noService) {
+        ws.cell(x1, y1, x2, y2, true).string(title).style(xlStyleBig).comment({ height: '50pt' });
+    } else if (title.endsWith(wrongNumber)) {
+        ws.cell(x1, y1, x2, y2, true).string(title).style(xlStyleBig).comment({ height: '50pt' });
     } else {
-        ws.cell(x1, y1, x2, y2, true).string(title).style(xlStyleSmall);
+        ws.cell(x1, y1, x2, y2, true).string(title).style(xlStyleSmall).comment({ height: '50pt' });
     }
 }
 
-var cIII = 0;
-var cTotal = 0;
 
 function doCrawl() {
-    ////console.log("123");
-    var header = ["STT", "Họ và tên", "Số điện thoại", "Loại thuê bao", "Tỉnh/Thành phố", "Số tiền trong tài khoản chính", "Dịch vụ đăng ký trên hệ thống VC", "STT", "DỊCH VỤ", "Gói cước", "Giá cước", "Mổ tả chung", "Đối tượng"];
-    currentMegre = 0;
-
-    for (let i = 0; i < header.length; i++) {
-        if (i <= 5) {
-            writeToXcellMerge(1, Number.parseInt(i) + 1, 2, Number.parseInt(i) + 1, header[i]);
-        }
-        else if (i == 6) {
-            writeToXcellMerge(1, 7, 1, 12, header[i]);
-        }
-        else {
-            writeToXcell(2, Number.parseInt(i), header[i]);
-        }
-    }
     puppeteer.launch({ headless: true, executablePath: exPath == "" ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" : exPath }).then(async browser => {
         const page = await browser.newPage();
+
+        await page.goto('https://daily.vinaphone.com.vn/');
+        page.setViewport({ width: 2600, height: 3000 });
+
         page.on('dialog', async dialog => {
             await mainWindow.webContents.send('crawl:incorrect_number', inputPhoneNumberArray[cIII]);
+            //await dialog.dismiss();
+            await browser.close();
+            dialog.dismiss();
+            startStartIndex = cIII + 1;
+            await writeToXcell(cIII + 3 + currentMegre, 1, startStartIndex + "");
+            await writeToXcellMerge(cIII + 3 + currentMegre, 2, cIII + 3 + currentMegre, 12, inputPhoneNumberArray[cIII] + " - " + wrongNumber);
+            ws.row(cIII + 3 + currentMegre).setHeight(80);
+            await doCrawl();
         });
-        await page.goto('https://daily.vinaphone.com.vn/');
-        page.setViewport({ width: 1280, height: 2400 });
 
         await page.click('#btn-alert1 .effect-sadie');
 
@@ -264,7 +276,6 @@ function doCrawl() {
 
         await page.waitForNavigation({ waitUntil: 'networkidle0' })
 
-
         //await page.click('.sidebar .antiScroll .antiscroll-inner .antiscroll-content .sidebar_inner #side_accordion .accordion-group .accordion-heading .accordion-toggle .icon-6');
 
         //await page.click('.sidebar .antiScroll .antiscroll-inner .antiscroll-content .sidebar_inner #side_accordion .accordion-group #collapseSix');
@@ -272,25 +283,32 @@ function doCrawl() {
 
         await page.goto('https://daily.vinaphone.com.vn/portal/pcm!executeSearchSubscriber');
 
-        var bodyFileExxcel = [];
-        bodyFileExxcel.push(header);
-
-        //Số điện thoại vào array này
-        //var inputPhoneNumberArray = ['0944854975', '0946245467', '0944854975', '0946245467', '0944854975', '0946245467', '0944854975'];
-
         const start = async () => {
-            await asyncForEach(inputPhoneNumberArray, async (element, index) => {
+            await asyncForEach(inputPhoneNumberArray, startStartIndex, async (element, index) => {
                 cIII = index;
-                ////console.log("index", element, index);
-                if (index == 0) {
-                    await page.$eval('.main_content #searchPhone', (el, value) => el.value = value, element);
-                } else {
-                    await page.$eval('.main_content #Pcmp050Form_pcmp050Model_phoneNumber', (el, value) => el.value = value, element);
+                if (startStartIndex == 0) {
+                    if (index == 0) {
+                        await page.$eval('.main_content #searchPhone', (el, value) => el.value = value, element);
+                    } else {
+                        await page.$eval('.main_content #Pcmp050Form_pcmp050Model_phoneNumber', (el, value) => el.value = value, element);
+                    }
+                }
+                else {
+                    try {
+                        await page.$eval('.main_content #searchPhone', (el, value) => el.value = value, element);
+                    } catch (err) {
+                        try {
+                            await page.$eval('.main_content #Pcmp050Form_pcmp050Model_phoneNumber', (el, value) => el.value = value, element);
+                        } catch (err) {
+
+                        }
+                    }
+
                 }
 
-                await page.click('.main_content .button');
-
                 //await page.waitForFunction("document.querySelector('.marginB30') && document.querySelector('.marginB30').style.display != 'none'");
+
+                await page.click('.main_content .button');
 
                 await page.waitForNavigation({ waitUntil: 'networkidle0' })
 
@@ -302,7 +320,7 @@ function doCrawl() {
                 let itemArray = [];
                 itemArray.push(index + 1);
                 let currentSerrvice = "";
-                //console.log("arrayName",arrayName.length);
+                console.log("arrayName", arrayName.length);
                 for (let i = 0; i < arrayName.length; i++) {
                     if (i < 8) {
                         if (i % 2 === 1) {
@@ -310,7 +328,6 @@ function doCrawl() {
                             itemArray.push(await (await arrayName[i].getProperty('innerHTML')).jsonValue());
                         }
                         if (i == 1) {
-                            // writeToXcell(index + 3, i + 1, inputPhoneNumberArray[index]);
                             itemArray.push(inputPhoneNumberArray[index]);
                         }
                     } else {
@@ -332,70 +349,32 @@ function doCrawl() {
 
                 if (currentSerrvice == "") {
                     currentSerrvice = noService;
-                    //console.log("countMegre", countMegre, "curentMegre", currentMegre, "array", currentSerrvice);
                     await writeToXcellMerge(index + 3 + currentMegre, 7, index + 3 + currentMegre, 12, currentSerrvice);
                     countMegre = 1;
                 }
-                //itemArray.push(currentSerrvice);
-
-                //console.log( itemArray);
-
                 for (let i = 0; i < itemArray.length; i++) {
                     await writeToXcellMerge(index + 3 + currentMegre, Number.parseInt(i + 1), index + 3 + currentMegre + countMegre - 1, Number.parseInt(i + 1), typeof itemArray[i] == "number" ? itemArray[i] + "" : itemArray[i]);
                 }
 
+                ws.row(index + 3 + currentMegre).setHeight(50);
 
                 currentMegre += countMegre - 1;
-                ////console.log("content\n", itemArray);
-
-                //bodyFileExxcel.push(itemArray);
-
-                ////console.log("excel will be\n", bodyFileExxcel);
-
             });
-
-            ////console.log('Đã crawl xong data');
 
             let cTimee = new Date();
 
-            await wb.write("("+cTimee.getHours()+"Giờ-"+cTimee.getMinutes()+" Ngay"+cTimee.getDate()+" Thang "+cTimee.getMonth()+" Nam "+cTimee.getFullYear()+")   "+fileNametxt+".xlsx");
-            //console.log("("+cTimee.getHours()+"-"+cTimee.getMinutes()+" ngay"+cTimee.getDate()+" thang "+cTimee.getMonth()+" nam "+cTimee.getFullYear()+")   "+fileNametxt+".xlsx");
-            //await wb.write(fileNametxt+".xlsx");
-            // var ws = XLSX.utils.aoa_to_sheet(bodyFileExxcel, {cellDates:true})
-
-            // ws['!rows'] = [{hpt:50},{hpt:50}];
-
-            // const bufferExcel = await xlsx.build([{ name: "vinaphone_sheet", data: bodyFileExxcel }],optionsExcel)
-
-            // await fs.writeFile("ketqua.xlsx", bufferExcel, function cb(err) {
-            //     if (err) throw err;
-            //     ////console.log('Đã ghi vào file excel...');
-            // });
-
-
-
-            // try {
-            // await xlsx.readFile("ketqua.xlsx");
-            // var worksheet = await workbook.Sheets[0];
-            // await XLSX.writeFile('ketqua.xlsx', {cellStyles: true});
-            // }
-            // catch(e){
-
-            // }
-
-
+            await wb.write("(" + cTimee.getHours() + " Gio -" + cTimee.getMinutes() + " Phut Ngay " + cTimee.getDate() + " Thang " + cTimee.getMonth() + " Nam " + cTimee.getFullYear() + ")   " + fileNametxt + ".xlsx");
 
             await browser.close();
 
             await mainWindow.webContents.send('crawl:result', true);
-            //await ipcMain.send('crawl:result', true);            
         }
 
         start();
 
 
     }).catch(async (err) => {
-        ////console.log("cindererr", err);
+        console.log("pupperteer error ", err);
         await mainWindow.webContents.send('crawl:network_error', true);
     });
 }
@@ -404,11 +383,11 @@ function timer(ms) {
     return new Promise(res => setTimeout(res, ms));
 }
 
-async function asyncForEach(array, callback) {
+async function asyncForEach(array, startIndex, callback) {
     let cIndex = 1;
-    for (let index = 0; index < array.length; index++) {
+    for (let index = startIndex; index < array.length; index++) {
         await callback(array[index], index);
-        console.log("xong ", cIII + 1 , " = " + array[cIII] );
+        console.log("xong ", cIII + 1, " = " + array[cIII]);
         mainWindow.webContents.send('crawl:onrunning', (index + 1) + " " + array.length);
         if (index == cIndex * limitRequest - 1 && index < array.length - 1) {
             cIndex++;
@@ -416,4 +395,3 @@ async function asyncForEach(array, callback) {
         }
     }
 }
-
