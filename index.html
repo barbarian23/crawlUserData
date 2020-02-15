@@ -177,7 +177,7 @@
             let tItem = item.split(" ");
             let tResult = Math.round(Number.parseFloat(tItem[0]) / Number.parseFloat(tItem[1])*100  * 100) / 100;
             document.getElementById("div_grey").style.width = tResult+"%";
-            document.getElementById("success_text").innerHTML = tResult+"% - ("+tItem[0]+" / "+tItem[1]+")";
+            document.getElementById("success_text").innerHTML = tResult+"% - ( "+tItem[0]+"/"+tItem[1]+" )";
             
         });
 
