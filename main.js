@@ -8,15 +8,15 @@ var xl = require('excel4node');
 var wb;
 var ws;
 var xlStyleSmall, xlStyleBig;
-
+let fileNametxt = "";
 let mainWindow;
 var inputPhoneNumberArray = [];
-var header = ["STT", "Họ và tên", "Số điện thoại", "Loại thuê bao", "Tỉnh/Thành phố", "Số tiền trong tài khoản chính", "Dịch vụ đăng ký trên hệ thống VC", "STT", "DỊCH VỤ", "Gói cước", "Giá cước", "Mổ tả chung", "Đối tượng"];
 const delayInMilliseconds = 60000;
 var exPath = '';
 var directionToSource = "";
 var limitRequest = 15;
 var currentMegre = 0;
+var noService = "Thuê bao này hiện không sử dụng dịch vụ nào";
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -147,6 +147,10 @@ function readFile() {
         if (data == '' || data == null) {
             await mainWindow.webContents.send('crawl:read_error', false);
         } else {
+            let arraySourceFileName = directionToSource.split("\\");
+            fileNametxt = arraySourceFileName[arraySourceFileName.length - 1];
+            fileNametxt = fileNametxt.replace('.txt','');
+            console.log(fileNametxt);
             let tResult = data.split("\n");
             inputPhoneNumberArray = [];
             tResult.forEach(element => {
@@ -172,6 +176,8 @@ function readFile() {
 
             xlStyleSmall = wb.createStyle({
                 alignment: {
+                    vertical: ['center'],
+                    horizontal: ['center'],
                     wrapText: true,
                 },
                 font: {
@@ -183,6 +189,7 @@ function readFile() {
 
             xlStyleBig = wb.createStyle({
                 alignment: {
+                    vertical: ['center'],
                     wrapText: true,
                 },
                 font: {
@@ -204,13 +211,21 @@ function writeToXcell(x, y, title) {
     //     ws.cell(x, y).string(title).style(xlStyleSmall);
     // } else {
     //console.log("Ghi vao o ", x, y, "gia tri", title);
-    ws.cell(x, y).string(title).style(xlStyleBig);
+    if ( y > 10){
+        ws.cell(x, y).string(title).style(xlStyleBig);
+    } else {
+        ws.cell(x, y).string(title).style(xlStyleSmall);
+    }
     // }
 }
 
 function writeToXcellMerge(x1, y1, x2, y2, title) {
     //console.log("merge", x1, y1, "to", x2, y2);
-    ws.cell(x1, y1, x2, y2, true).string(title).style(xlStyleSmall);
+    if (title == noService){
+        ws.cell(x1, y1, x2, y2, true).string(title).style(xlStyleBig);
+    } else {
+        ws.cell(x1, y1, x2, y2, true).string(title).style(xlStyleSmall);
+    }
 }
 
 var cIII = 0;
@@ -316,7 +331,7 @@ function doCrawl() {
 
 
                 if (currentSerrvice == "") {
-                    currentSerrvice = "Thuê bao này hiện không sử dụng dịch vụ nào";
+                    currentSerrvice = noService;
                     //console.log("countMegre", countMegre, "curentMegre", currentMegre, "array", currentSerrvice);
                     await writeToXcellMerge(index + 3 + currentMegre, 7, index + 3 + currentMegre, 12, currentSerrvice);
                     countMegre = 1;
@@ -341,8 +356,11 @@ function doCrawl() {
 
             ////console.log('Đã crawl xong data');
 
-            await wb.write('ketqua.xlsx');
+            let cTimee = new Date();
 
+            await wb.write("("+cTimee.getHours()+"Giờ-"+cTimee.getMinutes()+" Ngay"+cTimee.getDate()+" Thang "+cTimee.getMonth()+" Nam "+cTimee.getFullYear()+")   "+fileNametxt+".xlsx");
+            //console.log("("+cTimee.getHours()+"-"+cTimee.getMinutes()+" ngay"+cTimee.getDate()+" thang "+cTimee.getMonth()+" nam "+cTimee.getFullYear()+")   "+fileNametxt+".xlsx");
+            //await wb.write(fileNametxt+".xlsx");
             // var ws = XLSX.utils.aoa_to_sheet(bodyFileExxcel, {cellDates:true})
 
             // ws['!rows'] = [{hpt:50},{hpt:50}];
