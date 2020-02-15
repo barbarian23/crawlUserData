@@ -20,6 +20,7 @@ var noService = "Thuê bao này hiện không sử dụng dịch vụ nào";
 var wrongNumber = "Số điện thoại này bị sai";
 var cIII = 0;
 var startStartIndex = 0;
+var crawling = false;
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -48,7 +49,10 @@ ipcMain.on('crawl:do', async function (e, item) {
         if (directionToSource == "" || directionToSource == null) {
             chooseSource(readFile);
         } else {
-            await readFile();
+            if (crawling == false) {
+                await readFile();
+                crawling = true;
+            }
         }
     }
 })
@@ -118,7 +122,9 @@ const mainMenuTemplate = [
                 label: 'Chọn tệp chứa danh sách điện thoại',
                 accelerator: process.platform == 'darwin' ? 'Command+F' : 'Ctrl+F',
                 click() {
-                    chooseSource();
+                    if (crawling == false) {
+                        chooseSource();
+                    }
                 }
             },
             {
@@ -368,6 +374,7 @@ function doCrawl() {
             await browser.close();
 
             await mainWindow.webContents.send('crawl:result', true);
+            crawling = false;
         }
 
         start();
@@ -395,3 +402,4 @@ async function asyncForEach(array, startIndex, callback) {
         }
     }
 }
+
