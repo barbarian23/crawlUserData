@@ -66,6 +66,7 @@
             if (item) {
                 document.getElementById("div_login_loading").style.display = 'none';
                 document.getElementById("div_progress_bar").style.display = 'none';
+                document.getElementById("success_text").style.display = 'none';
                 document.getElementById("error_crawl").innerHTML = "File danh sách số điện thoại cần phải là file .txt";
                 document.getElementById("error_crawl").style.display = 'block';
                 document.getElementById("error_text").innerHTML = "File danh sách số điện thoại cần phải là file .txt";
@@ -73,6 +74,7 @@
             } else  {
                 document.getElementById("div_login_loading").style.display = 'none';
                 document.getElementById("div_progress_bar").style.display = 'none';
+                document.getElementById("success_text").style.display = 'none';
                 document.getElementById("error_crawl").style.display = 'none';
                 document.getElementById("error_text").style.display = 'none';
             } 
@@ -82,13 +84,15 @@
             if (item) {
                 document.getElementById("div_login_loading").style.display = 'none';
                 document.getElementById("div_progress_bar").style.display = 'none';
-                document.getElementById("error_crawl").innerHTML = "File danh sáhc số điện thoại cần phải là file .txt";
+                document.getElementById("success_text").style.display = 'none';
+                document.getElementById("error_crawl").innerHTML = "File danh sách số điện thoại cần phải là file .txt";
                 document.getElementById("error_crawl").style.display = 'block';
                 document.getElementById("error_text").innerHTML = "File danh sách số điện thoại cần phải là file .txt";
                 document.getElementById("error_text").style.display = 'block';
             } else {
                 document.getElementById("div_login_loading").style.display = 'none';
                 document.getElementById("div_progress_bar").style.display = 'none';
+                document.getElementById("success_text").style.display = 'none';
                 document.getElementById("error_crawl").style.display = 'none';
                 document.getElementById("error_text").style.display = 'none';
             }
@@ -98,28 +102,40 @@
             if (item) {
                 document.getElementById("div_login_loading").style.display = 'none';
                 document.getElementById("div_progress_bar").style.display = 'none';
+                document.getElementById("success_text").style.display = 'none';
                 document.getElementById("success_text").innerHTML = "Truy xuất dữ liệu thành công";
                 document.getElementById("success_text").style.display = 'block';
                 crawling = false;
             } else {
                 document.getElementById("div_login_loading").style.display = 'none';
                 document.getElementById("div_progress_bar").style.display = 'none';
+                document.getElementById("success_text").style.display = 'none';
                 document.getElementById("error_crawl").innerHTML = "Truy xuất dữ liệu không thành công";
                 document.getElementById("error_crawl").style.display = 'block';
                 crawling = false;
             }
         });
 
+        ipcRenderer.on("crawl:read_sucess", (e, item) => {
+            if (item) {
+                document.getElementById("div_login_loading").style.display = 'block';
+                document.getElementById("div_progress_bar").style.display = 'block';
+                document.getElementById("success_text").style.display = 'block';
+            } 
+        });
+
         ipcRenderer.on("crawl:read_error", (e, item) => {
             if (item) {
                 document.getElementById("div_login_loading").style.display = 'none';
                 document.getElementById("div_progress_bar").style.display = 'none';
+                document.getElementById("success_text").style.display = 'none';
                 document.getElementById("error_crawl").innerHTML = `Lỗi đọc file,cần chọn file txt,bấm tổ hợp crt + f để chọn file`;
                 document.getElementById("error_crawl").style.display = 'block';
                 //crawling = false;
             } else {
                 document.getElementById("div_login_loading").style.display = 'none';
                 document.getElementById("div_progress_bar").style.display = 'none';
+                document.getElementById("success_text").style.display = 'none';
                 document.getElementById("error_crawl").innerHTML = "File danhsach.txt chưa có số điện thoại nào";
                 document.getElementById("error_crawl").style.display = 'block';
                // crawling = false;
@@ -130,12 +146,14 @@
             if (item) {
                 document.getElementById("div_login_loading").style.display = 'none';
                 document.getElementById("div_progress_bar").style.display = 'none';
+                document.getElementById("success_text").style.display = 'none';
                 document.getElementById("error_crawl").innerHTML = "Lỗi mạng,vui lòng thử lại";
                 document.getElementById("error_crawl").style.display = 'block';
                 crawling = false;
             } else {
                 document.getElementById("div_login_loading").style.display = 'none';
                 document.getElementById("div_progress_bar").style.display = 'none';
+                document.getElementById("success_text").style.display = 'none';
                 document.getElementById("error_crawl").innerHTML = "Lỗi mạng,vui lòng thử lại";
                 document.getElementById("error_crawl").style.display = 'block';
                 crawling = false;
@@ -147,6 +165,7 @@
             if (item) {
                 document.getElementById("div_login_loading").style.display = 'none';
                 document.getElementById("div_progress_bar").style.display = 'none';
+                document.getElementById("success_text").style.display = 'none';
                 document.getElementById("error_crawl").innerHTML = "Số điện thoại " + item + "  không đúng! Vui lòng chọn thử lại";
                 document.getElementById("error_crawl").style.display = 'block';
                 crawling = false;
@@ -156,8 +175,9 @@
         ipcRenderer.on("crawl:onrunning", (e, item) => {
             console.log(item);
             let tItem = item.split(" ");
-            let tResult = Number.parseFloat(tItem[0]) / Number.parseFloat(tItem[1])*100 ;
+            let tResult = Math.round(Number.parseFloat(tItem[0]) / Number.parseFloat(tItem[1])*100  * 100) / 100;
             document.getElementById("div_grey").style.width = tResult+"%";
+            document.getElementById("success_text").innerHTML = tResult+" - %("+tItem[0]+"/"+tItem[1]+")";
             
         });
 
@@ -209,6 +229,8 @@
             if (!crawling) {
                 document.getElementById("div_login_loading").style.display = 'block';
                 document.getElementById("div_progress_bar").style.display = 'block';
+                document.getElementById("success_text").style.display = 'block';
+                document.getElementById("success_text").innerHTML = "0%";
                 document.getElementById("div_grey").style.width = "0%";
                 ipcRenderer.send('crawl:do', true);
                 crawling = true;
