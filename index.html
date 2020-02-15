@@ -41,7 +41,7 @@
 
     <div class="div-login" id="div-craw">
         <div class="div-login-crawl">
-            <div class="div-login-button-submit" onclick="crawl()">
+            <div class="div-login-button-submit" id="btn_crawl" onclick="crawl()">
                 <span>Tra cứu thông tin</span>
             </div>
             <div class="div-login-loading" id="div_login_loading"></div>
@@ -105,6 +105,7 @@
                 document.getElementById("success_text").style.display = 'none';
                 document.getElementById("success_text").innerHTML = "Truy xuất dữ liệu thành công";
                 document.getElementById("success_text").style.display = 'block';
+                document.getElementById("btn_crawl").style.display = 'block';
                 crawling = false;
             } else {
                 document.getElementById("div_login_loading").style.display = 'none';
@@ -112,6 +113,7 @@
                 document.getElementById("success_text").style.display = 'none';
                 document.getElementById("error_crawl").innerHTML = "Truy xuất dữ liệu không thành công";
                 document.getElementById("error_crawl").style.display = 'block';
+                document.getElementById("btn_crawl").style.display = 'none';
                 crawling = false;
             }
         });
@@ -121,6 +123,7 @@
                 document.getElementById("div_login_loading").style.display = 'block';
                 document.getElementById("div_progress_bar").style.display = 'block';
                 document.getElementById("success_text").style.display = 'block';
+                document.getElementById("error_crawl").style.display = 'none';
             } 
         });
 
@@ -149,6 +152,7 @@
                 document.getElementById("success_text").style.display = 'none';
                 document.getElementById("error_crawl").innerHTML = "Lỗi mạng,vui lòng thử lại";
                 document.getElementById("error_crawl").style.display = 'block';
+                document.getElementById("btn_crawl").style.display = 'block';
                 crawling = false;
             } else {
                 document.getElementById("div_login_loading").style.display = 'none';
@@ -156,6 +160,7 @@
                 document.getElementById("success_text").style.display = 'none';
                 document.getElementById("error_crawl").innerHTML = "Lỗi mạng,vui lòng thử lại";
                 document.getElementById("error_crawl").style.display = 'block';
+                document.getElementById("btn_crawl").style.display = 'block';
                 crawling = false;
             }
         });
@@ -168,7 +173,6 @@
                 // document.getElementById("success_text").style.display = 'none';
                 document.getElementById("error_crawl").innerHTML = "Số điện thoại " + item + "  không đúng! Chương trình sẽ không tra cứu số điện thoại này";
                 document.getElementById("error_crawl").style.display = 'block';
-                crawling = false;
             }
         });
         
@@ -233,6 +237,7 @@
                 document.getElementById("success_text").innerHTML = "0%";
                 document.getElementById("div_grey").style.width = "0%";
                 ipcRenderer.send('crawl:do', true);
+                document.getElementById("btn_crawl").style.display = 'none';
                 crawling = true;
             } else {
                
