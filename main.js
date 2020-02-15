@@ -11,11 +11,13 @@ var xlStyleSmall, xlStyleBig;
 
 let mainWindow;
 var inputPhoneNumberArray = [];
-var header = ["STT", "Họ và tên", "Số điện thoại", "Loại thuê bao", "Tỉnh/Thành phố", "Dịch vụ đang sử dụng"];
+var header = ["STT", "Họ và tên", "Số điện thoại", "Loại thuê bao", "Tỉnh/Thành phố", "Số tiền trong tài khoản chính", "Dịch vụ đăng ký trên hệ thống VC", "STT", "DỊCH VỤ", "Gói cước", "Giá cước", "Mổ tả chung", "Đối tượng"];
 const delayInMilliseconds = 60000;
 var exPath = '';
 var directionToSource = "";
 var limitRequest = 15;
+var currentMegre = 0;
+
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 800, height: 600, webPreferences: {
@@ -38,7 +40,7 @@ function createWindow() {
 app.on('ready', createWindow);
 
 ipcMain.on('crawl:do', async function (e, item) {
-    //console.log(e, item);
+    ////console.log(e, item);
     if (item) {
         if (directionToSource == "" || directionToSource == null) {
             chooseSource(readFile);
@@ -62,7 +64,7 @@ app.on('activate', function () {
 
 function chooseSource(callback) {
     dialog.showOpenDialog({
-        title :"Chọn đường dẫn tới file text chứa danh sách số điện thoại",
+        title: "Chọn đường dẫn tới file text chứa danh sách số điện thoại",
         properties: ['openFile', 'multiSelections']
     }, function (files) {
         if (files !== undefined) {
@@ -73,33 +75,33 @@ function chooseSource(callback) {
             await mainWindow.webContents.send('crawl:error_choose_not_txt', true);
         } else {
             directionToSource = result.filePaths[0];
-            console.log(result.filePaths);
+            //console.log(result.filePaths);
             await mainWindow.webContents.send('crawl:error_choose_not_txt', false);
             callback();
         }
     }).catch(err => {
-        //console.log(err);
+        ////console.log(err);
     });
 };
 
 function chooseGoogelPath() {
     dialog.showOpenDialog({
-        title :"Chọn đường dẫn tới Google Chrome",
+        title: "Chọn đường dẫn tới Google Chrome",
         properties: ['openFile', 'multiSelections']
     }, function (files) {
         if (files !== undefined) {
             // handle files
         }
-    }).then( async (result) => {
+    }).then(async (result) => {
         if (!result.filePaths[0].endsWith("chrome.exe")) {
             await mainWindow.webContents.send('crawl:error_choose_not_chrome', true);
         } else {
             exPath = result.filePaths[0];
-            console.log(result.filePaths);
+            //console.log(result.filePaths);
             await mainWindow.webContents.send('crawl:error_choose_not_chrome', false);
         }
     }).catch(err => {
-        //console.log(err);
+        ////console.log(err);
     });
 };
 
@@ -137,7 +139,7 @@ const mainMenuTemplate = [
 function readFile() {
     fs.readFile(directionToSource, 'utf-8', async (err, data) => {
         if (err) {
-            //console.log("An error ocurred reading the file :" + err.message);
+            ////console.log("An error ocurred reading the file :" + err.message);
             await mainWindow.webContents.send('crawl:read_error', true);
             return;
         }
@@ -145,13 +147,13 @@ function readFile() {
         if (data == '' || data == null) {
             await mainWindow.webContents.send('crawl:read_error', false);
         } else {
-            let tResult = data.split(",");
+            let tResult = data.split("\n");
             inputPhoneNumberArray = [];
             tResult.forEach(element => {
                 inputPhoneNumberArray.push(element);
             });
             cTotal = inputPhoneNumberArray.length;
-            //console.log(inputPhoneNumberArray);
+            ////console.log(inputPhoneNumberArray);
 
             wb = new xl.Workbook();
             ws = wb.addWorksheet('vinaphone');
@@ -160,13 +162,17 @@ function readFile() {
             ws.column(3).setWidth(25);
             ws.column(4).setWidth(25);
             ws.column(5).setWidth(20);
-            ws.column(6).setWidth(148);
+            ws.column(6).setWidth(25);
+            ws.column(7).setWidth(20);
+            ws.column(8).setWidth(20);
+            ws.column(9).setWidth(20);
+            ws.column(10).setWidth(20);
+            ws.column(11).setWidth(60);
+            ws.column(12).setWidth(60);
 
             xlStyleSmall = wb.createStyle({
                 alignment: {
                     wrapText: true,
-                    horizontal: ['center'],
-                    vertical: ['center']
                 },
                 font: {
                     name: 'Arial',
@@ -178,7 +184,6 @@ function readFile() {
             xlStyleBig = wb.createStyle({
                 alignment: {
                     wrapText: true,
-                    vertical: ['center']
                 },
                 font: {
                     name: 'Arial',
@@ -187,26 +192,45 @@ function readFile() {
                 }
             });
 
+            await mainWindow.webContents.send('crawl:read_sucess', true);
+
             await doCrawl();
         }
     });
 }
 
 function writeToXcell(x, y, title) {
-    if (y < 6) {
-        ws.cell(x, y).string(title).style(xlStyleSmall);
-    } else {
-        ws.cell(x, y).string(title).style(xlStyleBig);
-    }
+    // if (y < 6) {
+    //     ws.cell(x, y).string(title).style(xlStyleSmall);
+    // } else {
+    //console.log("Ghi vao o ", x, y, "gia tri", title);
+    ws.cell(x, y).string(title).style(xlStyleBig);
+    // }
+}
+
+function writeToXcellMerge(x1, y1, x2, y2, title) {
+    //console.log("merge", x1, y1, "to", x2, y2);
+    ws.cell(x1, y1, x2, y2, true).string(title).style(xlStyleSmall);
 }
 
 var cIII = 0;
 var cTotal = 0;
 
 function doCrawl() {
-    //console.log("123");
+    ////console.log("123");
+    var header = ["STT", "Họ và tên", "Số điện thoại", "Loại thuê bao", "Tỉnh/Thành phố", "Số tiền trong tài khoản chính", "Dịch vụ đăng ký trên hệ thống VC", "STT", "DỊCH VỤ", "Gói cước", "Giá cước", "Mổ tả chung", "Đối tượng"];
+    currentMegre = 0;
+
     for (let i = 0; i < header.length; i++) {
-        writeToXcell(1, Number.parseInt(i) + 1, header[i]);
+        if (i <= 5) {
+            writeToXcellMerge(1, Number.parseInt(i) + 1, 2, Number.parseInt(i) + 1, header[i]);
+        }
+        else if (i == 6) {
+            writeToXcellMerge(1, 7, 1, 12, header[i]);
+        }
+        else {
+            writeToXcell(2, Number.parseInt(i), header[i]);
+        }
     }
     puppeteer.launch({ headless: true, executablePath: exPath == "" ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" : exPath }).then(async browser => {
         const page = await browser.newPage();
@@ -242,7 +266,7 @@ function doCrawl() {
         const start = async () => {
             await asyncForEach(inputPhoneNumberArray, async (element, index) => {
                 cIII = index;
-                //console.log("index", element, index);
+                ////console.log("index", element, index);
                 if (index == 0) {
                     await page.$eval('.main_content #searchPhone', (el, value) => el.value = value, element);
                 } else {
@@ -257,54 +281,65 @@ function doCrawl() {
 
                 let arrayName = await page.$$('.marginB30 table.table td');
                 let bodyFileTrCountMoreThan6 = 0;
+                let countMegre = 0;
+                let newcolumn = 6;
+                let loopMerge = currentMegre;
                 let itemArray = [];
                 itemArray.push(index + 1);
                 let currentSerrvice = "";
+                //console.log("arrayName",arrayName.length);
                 for (let i = 0; i < arrayName.length; i++) {
                     if (i < 8) {
-                        if (i % 2 === 1 && i != 7) {
+                        if (i % 2 === 1) {
+                            //  writeToXcell(index + 3, i + 1, await (await arrayName[i].getProperty('innerHTML')).jsonValue());
                             itemArray.push(await (await arrayName[i].getProperty('innerHTML')).jsonValue());
                         }
                         if (i == 1) {
+                            // writeToXcell(index + 3, i + 1, inputPhoneNumberArray[index]);
                             itemArray.push(inputPhoneNumberArray[index]);
                         }
                     } else {
                         bodyFileTrCountMoreThan6++;
-                        if (bodyFileTrCountMoreThan6 === 1) {
-                            currentSerrvice += "<<< Dịch vụ đang dùng thứ " + await (await arrayName[i].getProperty('innerHTML')).jsonValue() + ">>>\n";
-                        } else {
-
-                            currentSerrvice += "- " + await (await arrayName[i].getProperty('innerHTML')).jsonValue() + "\n ";
-                            if (bodyFileTrCountMoreThan6 + 1 === 7) {
-                                bodyFileTrCountMoreThan6 = 0;
-                                currentSerrvice += "===========================================================================\n\n"
-                            }
+                        newcolumn++;
+                        await writeToXcell(index + 3 + loopMerge, newcolumn, await (await arrayName[i].getProperty('innerHTML')).jsonValue());
+                        currentSerrvice += "add";
+                        if (bodyFileTrCountMoreThan6 + 1 === 7) {
+                            newcolumn = 6;
+                            countMegre++;
+                            loopMerge++;
+                            bodyFileTrCountMoreThan6 = 0;
                         }
+
                     }
 
                 }
+
 
                 if (currentSerrvice == "") {
-                    currentSerrvice = "Thuê bao này hiện không sử dụng dịch vụ nào"
+                    currentSerrvice = "Thuê bao này hiện không sử dụng dịch vụ nào";
+                    //console.log("countMegre", countMegre, "curentMegre", currentMegre, "array", currentSerrvice);
+                    await writeToXcellMerge(index + 3 + currentMegre, 7, index + 3 + currentMegre, 12, currentSerrvice);
+                    countMegre = 1;
                 }
-                itemArray.push(currentSerrvice);
+                //itemArray.push(currentSerrvice);
+
+                //console.log( itemArray);
 
                 for (let i = 0; i < itemArray.length; i++) {
-                    if (typeof itemArray[i] === "number") {
-                        itemArray[i] += "";
-                    }
-                    writeToXcell(index + 2, i + 1, itemArray[i]);
+                    await writeToXcellMerge(index + 3 + currentMegre, Number.parseInt(i + 1), index + 3 + currentMegre + countMegre - 1, Number.parseInt(i + 1), typeof itemArray[i] == "number" ? itemArray[i] + "" : itemArray[i]);
                 }
 
-                //console.log("content\n", itemArray);
 
-                bodyFileExxcel.push(itemArray);
+                currentMegre += countMegre - 1;
+                ////console.log("content\n", itemArray);
 
-                //console.log("excel will be\n", bodyFileExxcel);
-               
+                //bodyFileExxcel.push(itemArray);
+
+                ////console.log("excel will be\n", bodyFileExxcel);
+
             });
 
-            //console.log('Đã crawl xong data');
+            ////console.log('Đã crawl xong data');
 
             await wb.write('ketqua.xlsx');
 
@@ -316,7 +351,7 @@ function doCrawl() {
 
             // await fs.writeFile("ketqua.xlsx", bufferExcel, function cb(err) {
             //     if (err) throw err;
-            //     //console.log('Đã ghi vào file excel...');
+            //     ////console.log('Đã ghi vào file excel...');
             // });
 
 
@@ -342,7 +377,7 @@ function doCrawl() {
 
 
     }).catch(async (err) => {
-        //console.log("cindererr", err);
+        ////console.log("cindererr", err);
         await mainWindow.webContents.send('crawl:network_error', true);
     });
 }
@@ -355,8 +390,8 @@ async function asyncForEach(array, callback) {
     let cIndex = 1;
     for (let index = 0; index < array.length; index++) {
         await callback(array[index], index);
-        console.log("xong 1 lan",cIII + " " + cTotal);
-        mainWindow.webContents.send('crawl:onrunning', (index+1) + " " + array.length);
+        console.log("xong ", cIII + 1 , " = " + array[cIII] );
+        mainWindow.webContents.send('crawl:onrunning', (index + 1) + " " + array.length);
         if (index == cIndex * limitRequest - 1 && index < array.length - 1) {
             cIndex++;
             await timer(delayInMilliseconds);
