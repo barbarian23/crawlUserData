@@ -22,7 +22,7 @@ var cIII = 0;
 var startStartIndex = 0;
 var crawling = false;
 var fileNamexlxs = "";
-var threshHoldeCount = 100;
+var threshHoldeCount = 50;
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 800, height: 600, webPreferences: {
@@ -413,8 +413,9 @@ async function asyncForEach(array, startIndex, callback) {
             cIndex++;
             await timer(delayInMilliseconds);
         }
-        if (index % threshHoldeCount === 0 && i > 0){
+        if (index % threshHoldeCount === 0 && index > 0){
             await writeToFileXLSX();
         }
     }
 }
+
