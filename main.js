@@ -22,7 +22,7 @@ var cIII = 0;
 var startStartIndex = 0;
 var crawling = false;
 var fileNamexlxs = "";
-var threshHoldeCount = 50;
+var threshHoldeCount = 20;
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 800, height: 600, webPreferences: {
