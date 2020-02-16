@@ -21,7 +21,8 @@ var wrongNumber = "Số điện thoại này bị sai";
 var cIII = 0;
 var startStartIndex = 0;
 var crawling = false;
-
+var fileNamexlxs = "";
+var threshHoldeCount = 100;
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 800, height: 600, webPreferences: {
@@ -207,6 +208,10 @@ function readFile() {
                 }
             });
 
+            let cTimee = new Date();
+
+            fileNamexlxs = "(" + cTimee.getHours() + " Gio -" + cTimee.getMinutes() + " Phut Ngay " + cTimee.getDate() + " Thang " + cTimee.getMonth() + " Nam " + cTimee.getFullYear() + ")   " + fileNametxt + ".xlsx";
+
             await mainWindow.webContents.send('crawl:read_sucess', true);
 
             var header = ["STT", "Họ và tên", "Số điện thoại", "Loại thuê bao", "Tỉnh/Thành phố", "Số tiền trong tài khoản chính", "Dịch vụ đăng ký trên hệ thống VC", "STT", "DỊCH VỤ", "Gói cước", "Giá cước", "Mổ tả chung", "Đối tượng"];
@@ -227,6 +232,11 @@ function readFile() {
             await doCrawl();
         }
     });
+}
+
+async function writeToFileXLSX(){
+    //console.log("file name xlsx",fileNamexlxs);
+    await wb.write(fileNamexlxs);
 }
 
 function writeToXcell(x, y, title) {
@@ -326,7 +336,7 @@ function doCrawl() {
                 let itemArray = [];
                 itemArray.push(index + 1);
                 let currentSerrvice = "";
-                console.log("arrayName", arrayName.length);
+                //console.log("arrayName", arrayName.length);
                 for (let i = 0; i < arrayName.length; i++) {
                     if (i < 8) {
                         if (i % 2 === 1) {
@@ -367,9 +377,12 @@ function doCrawl() {
                 currentMegre += countMegre - 1;
             });
 
-            let cTimee = new Date();
+            // let cTimee = new Date();
 
-            await wb.write("(" + cTimee.getHours() + " Gio -" + cTimee.getMinutes() + " Phut Ngay " + cTimee.getDate() + " Thang " + cTimee.getMonth() + " Nam " + cTimee.getFullYear() + ")   " + fileNametxt + ".xlsx");
+            // await wb.write("(" + cTimee.getHours() + " Gio -" + cTimee.getMinutes() + " Phut Ngay " + cTimee.getDate() + " Thang " + cTimee.getMonth() + " Nam " + cTimee.getFullYear() + ")   " + fileNametxt + ".xlsx");
+
+            //lần chạy cuối cùng
+            await writeToFileXLSX();
 
             await browser.close();
 
@@ -381,7 +394,7 @@ function doCrawl() {
 
 
     }).catch(async (err) => {
-        console.log("pupperteer error ", err);
+        //console.log("pupperteer error ", err);
         await mainWindow.webContents.send('crawl:network_error', true);
     });
 }
@@ -394,12 +407,14 @@ async function asyncForEach(array, startIndex, callback) {
     let cIndex = 1;
     for (let index = startIndex; index < array.length; index++) {
         await callback(array[index], index);
-        console.log("xong ", cIII + 1, " = " + array[cIII]);
+        //console.log("xong ", cIII + 1, " = " + array[cIII]);
         mainWindow.webContents.send('crawl:onrunning', (index + 1) + " " + array.length);
         if (index == cIndex * limitRequest - 1 && index < array.length - 1) {
             cIndex++;
             await timer(delayInMilliseconds);
         }
+        if (index % threshHoldeCount === 0 && i > 0){
+            await writeToFileXLSX();
+        }
     }
 }
-
