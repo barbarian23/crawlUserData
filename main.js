@@ -57,7 +57,7 @@ ipcMain.on('crawl:do', async function (e, item) {
         //if (crawling == false) {
         //await readFile();
         ///console.log("do crawl");
-        await doCrawl();
+        prepareExxcel(doCrawl);
         //crawling = true;
         //}
     }
@@ -218,7 +218,7 @@ function writeToXcellMerge(x1, y1, x2, y2, title) {
 }
 
 async function prepareExxcel(callback){
-    wb = new xl.Workbook();
+        wb = new xl.Workbook();
         ws = wb.addWorksheet('vinaphone');
         ws.column(1).setWidth(5);
         ws.column(2).setWidth(25);
