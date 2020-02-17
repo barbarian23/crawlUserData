@@ -40,7 +40,15 @@
     </div>
 
     <div class="div-login" id="div-craw">
+        <div id="div-login-file-input" onclick="openFile()">
+            <img id="img_file_input" src='./assets/icons/file.png'>
+            <span id="span_file_input_success"></span>
+            <span id="span_file_input_error"></span>
+        </div>
         <div class="div-login-crawl">
+            <div class="div-login-number-delay"> 
+                <span>Thời gian nghỉ</span> <input type="number" id="second_crawl" max = "60" min = "10" value="10"><span>giây</span>
+            </div>
             <div class="div-login-button-submit" id="btn_crawl" onclick="crawl()">
                 <span>Tra cứu thông tin</span>
             </div>
@@ -62,39 +70,51 @@
 
         var crawling = false;
 
+        var fileNameTXT = "";
+        var fileNameXLSX = "";
+        function openFile(){
+            ipcRenderer.send('crawl:openFile', true);
+        }
+
         ipcRenderer.on("crawl:error_choose_not_txt", (e, item) => {
             if (item) {
-                document.getElementById("div_login_loading").style.display = 'none';
-                document.getElementById("div_progress_bar").style.display = 'none';
-                document.getElementById("success_text").style.display = 'none';
-                document.getElementById("error_crawl").innerHTML = "File danh sách số điện thoại cần phải là file .txt";
+                // document.getElementById("div_login_loading").style.display = 'none';
+                // document.getElementById("div_progress_bar").style.display = 'none';
+                // document.getElementById("success_text").style.display = 'none';
+                document.getElementById("error_crawl").innerHTML = "Tệp danh sách số điện thoại cần phải là tệp .txt";
                 document.getElementById("error_crawl").style.display = 'block';
-                document.getElementById("error_text").innerHTML = "File danh sách số điện thoại cần phải là file .txt";
-                document.getElementById("error_text").style.display = 'block';
+                //document.getElementById("error_text").style.display = 'none';
+                document.getElementById("span_file_input_error").style.display = 'block';
+                document.getElementById("span_file_input_error").innerHTML = "Tệp danh sách số điện thoại cần phải là tệp .txt.Bám vào đây đẻ chọn lại";
+                document.getElementById("span_file_input_success").style.display = 'none';
             } else  {
-                document.getElementById("div_login_loading").style.display = 'none';
-                document.getElementById("div_progress_bar").style.display = 'none';
-                document.getElementById("success_text").style.display = 'none';
-                document.getElementById("error_crawl").style.display = 'none';
-                document.getElementById("error_text").style.display = 'none';
+                document.getElementById("div-login-file-input").style.display = 'flex';
+                // document.getElementById("div_login_loading").style.display = 'none';
+                // document.getElementById("div_progress_bar").style.display = 'none';
+                // document.getElementById("success_text").style.display = 'none';
+                // document.getElementById("error_crawl").style.display = 'none';
+                // document.getElementById("error_text").style.display = 'none';
+                // document.getElementById("span_file_input_error").style.display = 'none';
+                // document.getElementById("span_file_input_success").style.display = 'none';
+                // document.getElementById("span_file_input_error").style.display = 'none';
             } 
         });
 
         ipcRenderer.on("crawl:error_choose_not_chrome", (e, item) => {
             if (item) {
-                document.getElementById("div_login_loading").style.display = 'none';
-                document.getElementById("div_progress_bar").style.display = 'none';
-                document.getElementById("success_text").style.display = 'none';
-                document.getElementById("error_crawl").innerHTML = "File danh sách số điện thoại cần phải là file .txt";
+                // document.getElementById("div_login_loading").style.display = 'none';
+                // document.getElementById("div_progress_bar").style.display = 'none';
+                // document.getElementById("success_text").style.display = 'none';
+                document.getElementById("error_crawl").innerHTML = "File google chrome phải là file exe";
                 document.getElementById("error_crawl").style.display = 'block';
-                document.getElementById("error_text").innerHTML = "File danh sách số điện thoại cần phải là file .txt";
+                document.getElementById("error_text").innerHTML = "File google chrome phải la file exe";
                 document.getElementById("error_text").style.display = 'block';
             } else {
-                document.getElementById("div_login_loading").style.display = 'none';
-                document.getElementById("div_progress_bar").style.display = 'none';
-                document.getElementById("success_text").style.display = 'none';
-                document.getElementById("error_crawl").style.display = 'none';
-                document.getElementById("error_text").style.display = 'none';
+                // document.getElementById("div_login_loading").style.display = 'none';
+                // document.getElementById("div_progress_bar").style.display = 'none';
+                // document.getElementById("success_text").style.display = 'none';
+                // document.getElementById("error_crawl").style.display = 'none';
+                // document.getElementById("error_text").style.display = 'none';
             }
         });
 
@@ -106,43 +126,63 @@
                 document.getElementById("success_text").innerHTML = "Truy xuất dữ liệu thành công";
                 document.getElementById("success_text").style.display = 'block';
                 document.getElementById("btn_crawl").style.display = 'flex';
-                crawling = false;
+                document.getElementById("span_file_input_error").style.display = 'none';
+                document.getElementById("span_file_input_success").innerHTML = "Truy xuất dữ liệu từ tệp "+fileNameTXT+" thành công.Bấm vào đây để chọn lại tệp";
+                document.getElementById("span_file_input_success").style.display = 'block';
+                //crawling = false;
             } else {
                 document.getElementById("div_login_loading").style.display = 'none';
                 document.getElementById("div_progress_bar").style.display = 'none';
                 document.getElementById("success_text").style.display = 'none';
                 document.getElementById("error_crawl").innerHTML = "Truy xuất dữ liệu không thành công";
                 document.getElementById("error_crawl").style.display = 'block';
-                document.getElementById("btn_crawl").style.display = 'none';
-                crawling = false;
+                document.getElementById("btn_crawl").style.display = 'flex';
+                document.getElementById("span_file_input_error").style.display = 'block';
+                document.getElementById("span_file_input_error").innerHTML = "Truy xuất dữ liệu từ tệp "+fileNameTXT+" thành công.Bấm vào đây để chọn lại tệp";
+                document.getElementById("span_file_input_success").style.display = 'none';
+                //crawling = false;
             }
         });
 
         ipcRenderer.on("crawl:read_sucess", (e, item) => {
-            if (item) {
-                document.getElementById("div_login_loading").style.display = 'block';
-                document.getElementById("div_progress_bar").style.display = 'block';
-                document.getElementById("success_text").style.display = 'block';
-                document.getElementById("error_crawl").style.display = 'none';
-            } 
+            fileNameTXT = item.split(" ")[0];
+            fileNameXLSX = item.split(" ")[1];
+            // document.getElementById("div_login_loading").style.display = 'block';
+            // document.getElementById("div_progress_bar").style.display = 'block'; 
+            //document.getElementById("error_crawl").style.display = 'none';
+            document.getElementById("btn_crawl").style.display = 'flex';
+            document.getElementById("span_file_input_success").style.display = 'block';
+            document.getElementById("span_file_input_success").innerHTML = "Tệp bạn chọn tên là '"+fileNameTXT+"'.Bấm vào đây để chọn lại tệp";
+            document.getElementById("span_file_input_error").style.display = 'none';
+            
         });
 
         ipcRenderer.on("crawl:read_error", (e, item) => {
-            if (item) {
-                document.getElementById("div_login_loading").style.display = 'none';
-                document.getElementById("div_progress_bar").style.display = 'none';
-                document.getElementById("success_text").style.display = 'none';
-                document.getElementById("error_crawl").innerHTML = `Lỗi đọc file,cần chọn file txt,bấm tổ hợp crt + f để chọn file`;
-                document.getElementById("error_crawl").style.display = 'block';
+                fileNameTXT = item;
+                // document.getElementById("div_login_loading").style.display = 'none';
+                // document.getElementById("div_progress_bar").style.display = 'none';
+                // document.getElementById("success_text").style.display = 'none';
+                //document.getElementById("error_crawl").innerHTML = `Lỗi đọc file,cần chọn file txt,bấm tổ hợp crt + f để chọn file`;
+                document.getElementById("span_file_input_error").style.display = 'block';
+                document.getElementById("span_file_input_error").innerHTML = "Tệp hiện tại '" + fileNameTXT + "'hiện không đọc được, vui lòng bấm vao đây chọn lại tệp";
+                document.getElementById("span_file_input_success").style.display = 'none';
+                //document.getElementById("error_crawl").style.display = 'block';
                 //crawling = false;
-            } else {
-                document.getElementById("div_login_loading").style.display = 'none';
-                document.getElementById("div_progress_bar").style.display = 'none';
-                document.getElementById("success_text").style.display = 'none';
-                document.getElementById("error_crawl").innerHTML = "File danhsach.txt chưa có số điện thoại nào";
+            
+        });
+
+        ipcRenderer.on("crawl:read_error_null", (e, item) => {
+                fileNameTXT = item;
+                // document.getElementById("div_login_loading").style.display = 'none';
+                // document.getElementById("div_progress_bar").style.display = 'none';
+                // document.getElementById("success_text").style.display = 'none';
+                //document.getElementById("error_crawl").innerHTML = "File "+fileNameTXT+" chưa có số điện thoại nào";
+                document.getElementById("span_file_input_error").style.display = 'block';
+                document.getElementById("span_file_input_error").innerHTML = "Tệp '"+fileNameTXT+"' chưa có số điện thoại nào,bấm vào đây để chọn lại tệp";
+                document.getElementById("span_file_input_success").style.display = 'none';
                 document.getElementById("error_crawl").style.display = 'block';
                // crawling = false;
-            }
+            
         });
 
         ipcRenderer.on("crawl:network_error", (e, item) => {
@@ -153,7 +193,7 @@
                 document.getElementById("error_crawl").innerHTML = "Lỗi mạng,vui lòng thử lại";
                 document.getElementById("error_crawl").style.display = 'block';
                 document.getElementById("btn_crawl").style.display = 'flex';
-                crawling = false;
+                //crawling = false;
             } else {
                 document.getElementById("div_login_loading").style.display = 'none';
                 document.getElementById("div_progress_bar").style.display = 'none';
@@ -161,8 +201,9 @@
                 document.getElementById("error_crawl").innerHTML = "Lỗi mạng,vui lòng thử lại";
                 document.getElementById("error_crawl").style.display = 'block';
                 document.getElementById("btn_crawl").style.display = 'flex';
-                crawling = false;
+                //crawling = false;
             }
+            document.getElementById("span_file_input").innerHTML = "Đang tra cứu danh sách số trong tệp '"+fileNameTXT+"'(Đang lỗi mạng)Bấm vào đây để đổi lại tệp";
         });
 
         ipcRenderer.on("crawl:incorrect_number", (e, item) => {
@@ -171,7 +212,7 @@
                 // document.getElementById("div_login_loading").style.display = 'none';
                 // document.getElementById("div_progress_bar").style.display = 'none';
                 // document.getElementById("success_text").style.display = 'none';
-                document.getElementById("error_crawl").innerHTML = "Số điện thoại " + item + "  không đúng! Chương trình sẽ không tra cứu số điện thoại này";
+                document.getElementById("error_crawl").innerHTML = "Số điện thoại '" + item + "'  không đúng! Chương trình sẽ không tra cứu số điện thoại này";
                 document.getElementById("error_crawl").style.display = 'block';
             }
         });
@@ -181,9 +222,21 @@
             let tItem = item.split(" ");
             let tResult = Math.round(Number.parseFloat(tItem[0]) / Number.parseFloat(tItem[1])*100  * 100) / 100;
             document.getElementById("div_grey").style.width = tResult+"%";
-            document.getElementById("success_text").innerHTML = tResult+"% - ( "+tItem[0]+"/"+tItem[1]+" )";
+            document.getElementById("success_text").innerHTML = "Đã hoàn thành "+tResult+"% - ( "+tItem[0]+"/"+tItem[1]+" )";
             
         });
+
+        ipcRenderer.on("crawl:runwithfile", (e, item) => {  
+            fileNameTXT = item;
+            document.getElementById("span_file_input").innerHTML = "Đang tra cứu danh sách số trong tệp '"+fileNameTXT+"'.Bấm vào đây để đổi lại tệp";
+        });
+
+        ipcRenderer.on("crawl:hideBTN", (e, item) => {  
+            if(item){
+            document.getElementById("btn_crawl").style.display = 'none';
+            }
+        });
+       
 
         function submit() {
             document.getElementById("error_text").style.display = 'none';
@@ -230,18 +283,19 @@
         function crawl() {
             document.getElementById("error_crawl").style.display = 'none';
             document.getElementById("success_text").style.display = 'none';
-            if (!crawling) {
+            //if (!crawling) {
                 document.getElementById("div_login_loading").style.display = 'block';
                 document.getElementById("div_progress_bar").style.display = 'block';
+                //document.getElementById("div-login-file-input").style.display = 'block';
                 document.getElementById("success_text").style.display = 'block';
+
                 document.getElementById("success_text").innerHTML = "0%";
                 document.getElementById("div_grey").style.width = "0%";
-                ipcRenderer.send('crawl:do', true);
+                let delayTime = document.getElementById("second_crawl").value;
+                delayTime = delayTime * 1000;
+                ipcRenderer.send('crawl:do', delayTime);
                 document.getElementById("btn_crawl").style.display = 'none';
-                crawling = true;
-            } else {
-               
-            }
+            // crawling = true;
         }
     </script>
 </body>
