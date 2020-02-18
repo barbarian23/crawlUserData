@@ -67,6 +67,54 @@ body{
     margin: 5px auto 10px auto;
 }
 
+#second_crawl{
+    width: 45px;
+    height: 45px;
+    border-radius: 4px;
+    border: 1px solid #324b73;
+    padding-left:  10px ;
+    -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+    -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+    box-sizing: border-box;
+    color: #324b73;
+}
+
+#div-login-file-input{
+    margin-bottom: 5px;
+    top:1px;
+    left:20px;
+    height: 50px;
+    min-width: 100px;
+    border: 1px solid #324b73;
+    word-break: break-all;
+    border-radius: 4px;
+    display: none;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+#div-login-file-input img{
+    height: 35px;
+    width: 35px;
+    background-position: 100% 100%;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+}
+
+#div-login-file-input span{
+    margin-left: 5px;
+}
+
+#span_file_input_success{
+    color: green;
+}
+
+#span_file_input_error{
+    color: red;
+}
+
+
 .div-login-button-submit{
     display:flex;
     width: 30%;
@@ -101,11 +149,21 @@ body{
 
 .div-login-crawl {
     display:flex;
-    width: 90%;
-    height: 90%;
+    width: 100%;
+    height: 100%;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+}
+
+.div-login-number-delay {
+    display:flex;
+    flex-direction: row;
+    width: 250px;
+    height: 45px;
+    margin-bottom: 25px;
+    align-items: center;
+    justify-content: space-evenly;
 }
 
 .div-login-loading{
