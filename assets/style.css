@@ -222,6 +222,13 @@ body{
     animation-iteration-count: infinite;
 }
 
+.logining{
+    display: block;
+    animation: shake 0.5s;
+    /* When the animation is finished, start again */
+    animation-iteration-count: infinite;
+}
+
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
