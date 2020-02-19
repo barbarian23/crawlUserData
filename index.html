@@ -261,11 +261,23 @@
         });
 
         ipcRenderer.on("crawl:login_success", (e, item) => {
-            if (item) {
+            if (item === 1) {
                 loginSuccess();
-            } else {
+            } else if (item === 0){
                 document.getElementById("error_text").innerHTML = "Sai tên đăng nhập hoặc mật khẩu";
+                document.getElementById("error_text").style.color = 'red';
                 document.getElementById("error_text").style.display = 'block';
+                document.getElementById("error_text").classList.remove('logining');
+            }else if (item === -1){
+                document.getElementById("error_text").innerHTML = "Có lỗi khi đăng nhập,vui lòng thử lại";
+                document.getElementById("error_text").style.color = 'red';
+                document.getElementById("error_text").style.display = 'block';
+                document.getElementById("error_text").classList.remove('logining');
+            } else if (item == 2) {
+                document.getElementById("error_text").innerHTML = "Đang đăng nhập vui lòng đợi ....";
+                document.getElementById("error_text").style.color = 'green';
+                document.getElementById("error_text").style.display = 'block';
+                document.getElementById("error_text").classList.add('logining');
             }
         });
 
@@ -305,7 +317,7 @@
             document.getElementById("div_progress_bar").style.display = 'block';
             //document.getElementById("div-login-file-input").style.display = 'block';
             document.getElementById("success_text").style.display = 'block';
-
+            document.getElementById("span_file_input_error").style.display = 'none';
             document.getElementById("success_text").innerHTML = "0%";
             document.getElementById("div_grey").style.width = "0%";
             let delayTime = document.getElementById("second_crawl").value;
