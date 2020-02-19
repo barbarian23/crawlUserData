@@ -192,7 +192,7 @@ function nothing() {
 
 
 function doLogin(){
-    concurentLogin = puppeteer.launch({ headless: false, executablePath: exPath == "" ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" : exPath }).then(async browser => {
+    concurentLogin = puppeteer.launch({ headless: true, executablePath: exPath == "" ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" : exPath }).then(async browser => {
         pageLogin = await browser.newPage();
         await mainWindow.webContents.send('crawl:login_success', 2);
         await pageLogin.goto('https://daily.vinaphone.com.vn/');
