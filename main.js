@@ -3,7 +3,7 @@ const { app, BrowserWindow, ipcMain, Menu, dialog } = electron;
 
 
 const puppeteer = require('puppeteer');
-var concurentPup;
+var concurentPup,concurentLogin;
 var fs = require('fs');
 var xl = require('excel4node');
 var wb;
@@ -19,17 +19,18 @@ var limitRequest = 15;
 var currentMegre = 0;
 var noService = "Thuê bao này hiện không sử dụng dịch vụ nào";
 var wrongNumber = "Số điện thoại này bị sai";
+var wrongLogin = "Tên truy nhập hoặc mật khẩu chưa đúng. Vui lòng thử lại";
 var cIII = 0;
 var startStartIndex = 0;
 var crawling = false;
 var fileNamexlxs = "";
 var threshHoldeCount = 10;
-var USERNAME = ['dangky41'];
-var PASSWORD = ['858382'];
+// var USERNAME = ['dangky41'];
+// var PASSWORD = ['858382'];
 var username = "";
 var password = "";
 let tResult = "";
-var page;
+var page,pageLogin;
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -78,19 +79,20 @@ ipcMain.on("crawl:openFile", async function (e, item) {
 ipcMain.on("crawl:login", async function (e, item) {
     username = item.split(" ")[0];
     password = item.split(" ")[1];
-    USERNAME.map((element, index) => {
-        if (element == username) {
-            PASSWORD.map((element, index) => {
-                if (element == password) {
-                    mainWindow.webContents.send('crawl:login_success', true);
-                } else {
-                    mainWindow.webContents.send('crawl:login_success', false);
-                }
-            });
-        } else {
-            mainWindow.webContents.send('crawl:login_success', false);
-        }
-    });
+    doLogin();
+    // USERNAME.map((element, index) => {
+    //     if (element == username) {
+    //         PASSWORD.map((element, index) => {
+    //             if (element == password) {
+    //                 mainWindow.webContents.send('crawl:login_success', true);
+    //             } else {
+    //                 mainWindow.webContents.send('crawl:login_success', false);
+    //             }
+    //         });
+    //     } else {
+    //         mainWindow.webContents.send('crawl:login_success', false);
+    //     }
+    // });
 });
 
 app.on('window-all-closed', function () {
@@ -186,6 +188,40 @@ function specialForOnlyHitButton() {
 
 function nothing() {
 
+}
+
+
+function doLogin(){
+    concurentLogin = puppeteer.launch({ headless: false, executablePath: exPath == "" ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" : exPath }).then(async browser => {
+        pageLogin = await browser.newPage();
+        await mainWindow.webContents.send('crawl:login_success', 2);
+        await pageLogin.goto('https://daily.vinaphone.com.vn/');
+        pageLogin.setViewport({ width: 2600, height: 3000 });
+        pageLogin.on('dialog', async dialog => {
+            //await mainWindow.webContents.send('crawl:incorrect_number', inputPhoneNumberArray[cIII]);
+            if(dialog.message() == "Tên truy nhập hoặc mật khẩu chưa đúng. Vui lòng thử lại"){
+                await mainWindow.webContents.send('crawl:login_success', 0);
+            } else {
+                await mainWindow.webContents.send('crawl:login_success', -1);
+            }
+            dialog.dismiss();
+            await browser.close();
+            concurentLogin = null;
+        });
+
+        await pageLogin.click('#btn-alert1 .effect-sadie');
+
+        await pageLogin.$eval('#popupAlert1 #report .clearfix #form-login .from-login .form-row #username1', (el, value) => el.value = value, username);
+        await pageLogin.$eval('#popupAlert1 #report .clearfix #form-login .from-login .form-row #password1', (el, value) => el.value = value, password);
+
+        await pageLogin.click('#popupAlert1 #report .clearfix #form-login .from-login .form-row .button');
+
+        await pageLogin.waitForNavigation({ waitUntil: 'networkidle0' })
+
+        await browser.close();
+        concurentLogin = null;
+        await mainWindow.webContents.send('crawl:login_success', 1);
+    }).catch(err => {console.log("login error",err);});
 }
 
 function readFile(callback) {
@@ -298,7 +334,7 @@ async function prepareExxcel(callback) {
 
     let cTimee = new Date();
 
-    fileNamexlxs = "(" + cTimee.getHours() + " Gio -" + cTimee.getMinutes() + " Phut Ngay " + cTimee.getDate() + " Thang " + cTimee.getMonth() + " Nam " + cTimee.getFullYear() + ")   " + fileNametxt + ".xlsx";
+    fileNamexlxs = "(" + cTimee.getHours() + " Gio -" + cTimee.getMinutes() + " Phut Ngay " + cTimee.getDate() + " Thang " + (cTimee.getMonth() + 1) + " Nam " + cTimee.getFullYear() + ")   " + fileNametxt + ".xlsx";
 
     var header = ["STT", "Họ và tên", "Số điện thoại", "Loại thuê bao", "Tỉnh/Thành phố", "Số tiền trong tài khoản chính", "Dịch vụ đăng ký trên hệ thống VC", "STT", "DỊCH VỤ", "Gói cước", "Giá cước", "Mổ tả chung", "Đối tượng"];
     currentMegre = 0;
@@ -327,7 +363,7 @@ function doCrawl() {
         page.close();
         doCrawl();
     } else {
-        concurentPup = puppeteer.launch({ headless: false, executablePath: exPath == "" ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" : exPath }).then(async browser => {
+        concurentPup = puppeteer.launch({ headless: true, executablePath: exPath == "" ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" : exPath }).then(async browser => {
             page = await browser.newPage();
 
             await page.goto('https://daily.vinaphone.com.vn/');
