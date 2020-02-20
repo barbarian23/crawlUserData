@@ -204,9 +204,9 @@ function doLogin(){
             } else {
                 await mainWindow.webContents.send('crawl:login_success', -1);
             }
-            dialog.dismiss();
-            await browser.close();
-            concurentLogin = null;
+            //dialog.dismiss();
+            //await browser.close();
+            //concurentLogin = null;
         });
 
         await pageLogin.click('#btn-alert1 .effect-sadie');
@@ -528,3 +528,4 @@ async function asyncForEach(array, startIndex, callback) {
         }
     }
 }
+
