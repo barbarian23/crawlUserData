@@ -3,12 +3,12 @@ const { app, BrowserWindow, ipcMain, Menu, dialog } = electron;
 
 
 const puppeteer = require('puppeteer');
-var concurentPup,concurentLogin;
+var concurentPup, concurentLogin;
 var fs = require('fs');
 var xl = require('excel4node');
 var wb;
 var ws;
-var xlStyleSmall, xlStyleBig;
+var xlStyleSmall, xlStyleBig, xlStyleNone;
 let fileNametxt = "";
 let mainWindow;
 var inputPhoneNumberArray = [];
@@ -17,6 +17,9 @@ var exPath = '';
 var directionToSource = "";
 var limitRequest = 15;
 var currentMegre = 0;
+var endRange = 11;
+var serviceRange = 6;
+var headeTitle = "header";
 var noService = "Thuê bao này hiện không sử dụng dịch vụ nào";
 var wrongNumber = "Số điện thoại này bị sai";
 var wrongLogin = "Tên truy nhập hoặc mật khẩu chưa đúng. Vui lòng thử lại";
@@ -25,12 +28,13 @@ var startStartIndex = 0;
 var crawling = false;
 var fileNamexlxs = "";
 var threshHoldeCount = 10;
+var defaultHeight = 35;
 // var USERNAME = ['dangky41'];
 // var PASSWORD = ['858382'];
 var username = "";
 var password = "";
 let tResult = "";
-var page,pageLogin;
+var page, pageLogin;
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -191,7 +195,7 @@ function nothing() {
 }
 
 
-function doLogin(){
+function doLogin() {
     concurentLogin = puppeteer.launch({ headless: true, executablePath: exPath == "" ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" : exPath }).then(async browser => {
         pageLogin = await browser.newPage();
         await mainWindow.webContents.send('crawl:login_success', 2);
@@ -199,7 +203,7 @@ function doLogin(){
         pageLogin.setViewport({ width: 2600, height: 3000 });
         pageLogin.on('dialog', async dialog => {
             //await mainWindow.webContents.send('crawl:incorrect_number', inputPhoneNumberArray[cIII]);
-            if(dialog.message() == "Tên truy nhập hoặc mật khẩu chưa đúng. Vui lòng thử lại"){
+            if (dialog.message() == wrongLogin) {
                 await mainWindow.webContents.send('crawl:login_success', 0);
             } else {
                 await mainWindow.webContents.send('crawl:login_success', -1);
@@ -221,7 +225,7 @@ function doLogin(){
         await browser.close();
         concurentLogin = null;
         await mainWindow.webContents.send('crawl:login_success', 1);
-    }).catch(err => {console.log("login error",err);});
+    }).catch(err => { console.log("login error", err); });
 }
 
 function readFile(callback) {
@@ -261,20 +265,52 @@ async function writeToFileXLSX() {
 }
 
 function writeToXcell(x, y, title) {
-    // if (y < 6) {
-    //     ws.cell(x, y).string(title).style(xlStyleSmall);
-    // } else {
     //console.log("Ghi vao o ", x, y, "gia tri", title);
-    if (y > 10) {
-        ws.cell(x, y).string(title).style(xlStyleBig);//.comment({height: '50pt'});
+
+    title += "";
+
+    if (title.startsWith("header")) {
+        let ttitle = title.split("-")[1];
+        title = JSON.stringify(title);
+        //title.replace("\"/g","");
+        ws.cell(x, y).string(ttitle).style(xlStyleNone);
     } else {
-        ws.cell(x, y).string(title).style(xlStyleSmall);//.comment({height: '50pt'});
+        if (title == wrongNumber) {
+            if (y > 10) {
+                ws.cell(x, y).string(title).style(xlStyleNone);//.comment({height: '50pt'});
+            } else {
+                ws.cell(x, y).string(title).style(xlStyleNone);//.comment({height: '50pt'});
+            }
+        } else if (title == noService) {
+            if (y > 10) {
+                ws.cell(x, y).string(title).style(xlStyleNone);//.comment({height: '50pt'});
+            } else {
+                ws.cell(x, y).string(title).style(xlStyleNone);//.comment({height: '50pt'});
+            }
+        }
+        else {
+            if (y > 10) {
+                ws.cell(x, y).string(title).style(xlStyleBig);//.comment({height: '50pt'});
+            } else {
+                ws.cell(x, y).string(title).style(xlStyleSmall);//.comment({height: '50pt'});
+            }
+        }
     }
     // }
 }
 
 function writeToXcellMerge(x1, y1, x2, y2, title) {
-    if (title == noService) {
+    //console.log("Ghi vao o ", x1, y1, "den ", x2, y2, "gia tri", title);
+
+    title += "";
+
+    if (title.startsWith("header")) {
+        let ttitle = title.split("-")[1];
+        title = JSON.stringify(title);
+        //title.replace("\"/g","");
+        ws.cell(x1, y1, x2, y2, true).string(ttitle).style(xlStyleNone).comment({ height: '50pt' });
+    }
+    else if (title == noService) {
         ws.cell(x1, y1, x2, y2, true).string(title).style(xlStyleBig).comment({ height: '50pt' });
     } else if (title.endsWith(wrongNumber)) {
         ws.cell(x1, y1, x2, y2, true).string(title).style(xlStyleBig).comment({ height: '50pt' });
@@ -301,11 +337,11 @@ async function prepareExxcel(callback) {
     ws.column(5).setWidth(20);
     ws.column(6).setWidth(28);
     ws.column(7).setWidth(20);
-    ws.column(8).setWidth(20);
+    ws.column(8).setWidth(47);
     ws.column(9).setWidth(20);
-    ws.column(10).setWidth(20);
-    ws.column(11).setWidth(60);
-    ws.column(12).setWidth(60);
+    ws.column(10).setWidth(40);
+    ws.column(11).setWidth(85);
+    //ws.column(12).setWidth(60);
 
     xlStyleSmall = wb.createStyle({
         alignment: {
@@ -323,6 +359,7 @@ async function prepareExxcel(callback) {
     xlStyleBig = wb.createStyle({
         alignment: {
             vertical: ['center'],
+            horizontal: ['center'],
             wrapText: true,
         },
         font: {
@@ -332,24 +369,39 @@ async function prepareExxcel(callback) {
         }
     });
 
+    xlStyleNone = wb.createStyle({
+        alignment: {
+            vertical: ['center'],
+            horizontal: ['center'],
+            wrapText: true,
+        },
+        font: {
+            bold: true,
+            name: 'Arial',
+            color: '#324b73',
+            size: 12,
+        },
+    });
+
     let cTimee = new Date();
 
     fileNamexlxs = "(" + cTimee.getHours() + " Gio -" + cTimee.getMinutes() + " Phut Ngay " + cTimee.getDate() + " Thang " + (cTimee.getMonth() + 1) + " Nam " + cTimee.getFullYear() + ")   " + fileNametxt + ".xlsx";
 
-    var header = ["STT", "Họ và tên", "Số điện thoại", "Loại thuê bao", "Tỉnh/Thành phố", "Số tiền trong tài khoản chính", "Dịch vụ đăng ký trên hệ thống VC", "STT", "DỊCH VỤ", "Gói cước", "Giá cước", "Mổ tả chung", "Đối tượng"];
+    var header = ["STT", "Họ và tên", "Số điện thoại", "Loại thuê bao", "Tỉnh/Thành phố", "Số tiền trong tài khoản chính", "Dịch vụ đăng ký trên hệ thống VC", "DỊCH VỤ", "Gói cước", "Giá cước", "Mổ tả chung", "Đối tượng"];
     currentMegre = 0;
 
     for (let i = 0; i < header.length; i++) {
         if (i <= 5) {
-            writeToXcellMerge(1, Number.parseInt(i) + 1, 2, Number.parseInt(i) + 1, header[i]);
+            writeToXcellMerge(1, Number.parseInt(i) + 1, 2, Number.parseInt(i) + 1, headeTitle + "-" + header[i]);
         }
         else if (i == 6) {
-            writeToXcellMerge(1, 7, 1, 12, header[i]);
+            writeToXcellMerge(1, 7, 1, endRange, headeTitle + "-" + header[i]);
         }
         else {
-            writeToXcell(2, Number.parseInt(i), header[i]);
+            writeToXcell(2, Number.parseInt(i), headeTitle + "-" + header[i]);
         }
     }
+    ws.row(1).setHeight(defaultHeight);
     startStartIndex = 0;
     mainWindow.webContents.send('crawl:hideBTN', true);
     callback();
@@ -375,9 +427,17 @@ function doCrawl() {
                 concurentPup = null;
                 dialog.dismiss();
                 startStartIndex = cIII + 1;
-                await writeToXcell(cIII + 3 + currentMegre, 1, startStartIndex + "");
-                await writeToXcellMerge(cIII + 3 + currentMegre, 2, cIII + 3 + currentMegre, 12, inputPhoneNumberArray[cIII] + " - " + wrongNumber);
-                ws.row(cIII + 3 + currentMegre).setHeight(80);
+                // await writeToXcell(cIII + 3 + currentMegre, 1, startStartIndex + "");
+                // await writeToXcellMerge(cIII + 3 + currentMegre, 2, cIII + 3 + currentMegre, endRange, inputPhoneNumberArray[cIII] + " - " + wrongNumber);
+                // ws.row(cIII + 3 + currentMegre).setHeight(80);
+                await writeToXcell(cIII + 3, 1, startStartIndex + "");
+                writeToXcell(cIII + 3, 3, inputPhoneNumberArray[cIII]);
+                writeToXcell(cIII + 3, 4, "");
+                writeToXcell(cIII + 3, 5, "");
+                writeToXcell(cIII + 3, 6, "" + 0);
+
+                await writeToXcell(cIII + 3, 8, wrongNumber);
+                ws.row(cIII + 3).setHeight(defaultHeight);
                 await doCrawl();
             });
 
@@ -430,30 +490,53 @@ function doCrawl() {
                     let bodyFileTrCountMoreThan6 = 0;
                     let countMegre = 0;
                     let newcolumn = 6;
+                    let userInfoCollumn = 4;//3 cột đầu đã được điền là STT,Họ và tên , Số điện thoại
                     let loopMerge = currentMegre;
                     let itemArray = [];
                     itemArray.push(index + 1);
                     let currentSerrvice = "";
                     //console.log("arrayName", arrayName.length);
-                    for (let i = 0; i < arrayName.length; i++) {
-                        if (i < 8) {
-                            if (i % 2 === 1) {
-                                //  writeToXcell(index + 3, i + 1, await (await arrayName[i].getProperty('innerHTML')).jsonValue());
-                                itemArray.push(await (await arrayName[i].getProperty('innerHTML')).jsonValue());
+                    //wait writeToXcell(index + 3 + loopMerge, 0, index + 1));
+                    await writeToXcell(index + 3, 1, (index + 1) + "");
+                    await writeToXcell(index + 3, 3, inputPhoneNumberArray[index] + "");
+                    for (let i = 1; i < arrayName.length; i++) {
+                        if (i < 9) {
+                            if (i == 8) {
+                                continue;
                             }
-                            if (i == 1) {
-                                itemArray.push(inputPhoneNumberArray[index]);
+                            if (i % 2 === 1) {
+                                if (i == 7)/*có thể không trả kết quả số tiền*/ {
+                                    console.log(await (await arrayName[i].getProperty('innerHTML')).jsonValue());
+                                    if (await (await arrayName[i].getProperty('innerHTML')).jsonValue() == null || await (await arrayName[i].getProperty('innerHTML')).jsonValue() == "") {
+                                        writeToXcell(index + 3, 6, 0 + "");
+                                    }
+                                    else {
+                                        writeToXcell(index + 3, 6, await (await arrayName[i].getProperty('innerHTML')).jsonValue());
+                                    }
+                                    itemArray.push(0);
+                                    userInfoCollumn++;
+                                } else if (i == 1) {//họ và tên
+                                    itemArray.push(await (await arrayName[i].getProperty('innerHTML')).jsonValue());
+                                    writeToXcell(index + 3, 2, await (await arrayName[i].getProperty('innerHTML')).jsonValue());
+                                }
+                                else {
+                                    writeToXcell(index + 3, userInfoCollumn, await (await arrayName[i].getProperty('innerHTML')).jsonValue());
+                                    itemArray.push(await (await arrayName[i].getProperty('innerHTML')).jsonValue());
+                                    userInfoCollumn++;
+                                }
                             }
                         } else {
                             bodyFileTrCountMoreThan6++;
                             newcolumn++;
-                            await writeToXcell(index + 3 + loopMerge, newcolumn, await (await arrayName[i].getProperty('innerHTML')).jsonValue());
+                            //await writeToXcell(index + 3 + loopMerge, newcolumn, await (await arrayName[i].getProperty('innerHTML')).jsonValue());
+                            await writeToXcell(index + 3, newcolumn, await (await arrayName[i].getProperty('innerHTML')).jsonValue());
                             currentSerrvice += "add";
-                            if (bodyFileTrCountMoreThan6 + 1 === 7) {
-                                newcolumn = 6;
-                                countMegre++;
-                                loopMerge++;
-                                bodyFileTrCountMoreThan6 = 0;
+                            if (bodyFileTrCountMoreThan6 + 1 === serviceRange) {
+                                break;
+                                //newcolumn = 6;
+                                //countMegre++;
+                                // loopMerge++;
+                                //bodyFileTrCountMoreThan6 = 0;
                             }
 
                         }
@@ -463,14 +546,18 @@ function doCrawl() {
 
                     if (currentSerrvice == "") {
                         currentSerrvice = noService;
-                        await writeToXcellMerge(index + 3 + currentMegre, 7, index + 3 + currentMegre, 12, currentSerrvice);
-                        countMegre = 1;
+                        //await writeToXcellMerge(index + 3 + currentMegre, 7, index + 3 + currentMegre, 12, currentSerrvice);
+                        //await writeToXcellMerge(index + 3, 7, index + 3, endRange, currentSerrvice);
+                        await writeToXcell(index + 3, 8, currentSerrvice);
+                        //countMegre = 1;
                     }
-                    for (let i = 0; i < itemArray.length; i++) {
-                        await writeToXcellMerge(index + 3 + currentMegre, Number.parseInt(i + 1), index + 3 + currentMegre + countMegre - 1, Number.parseInt(i + 1), typeof itemArray[i] == "number" ? itemArray[i] + "" : itemArray[i]);
-                    }
+                    //ghi thoong tin
+                    // for (let i = 0; i < itemArray.length; i++) {
+                    //await writeToXcellMerge(index + 3 + currentMegre, Number.parseInt(i + 1), index + 3 + currentMegre + countMegre - 1, Number.parseInt(i + 1), typeof itemArray[i] == "number" ? itemArray[i] + "" : itemArray[i]);
+                    //}
 
-                    ws.row(index + 3 + currentMegre).setHeight(50);
+                    //ws.row(index + 3 + currentMegre).setHeight(50);
+                    ws.row(index + 3).setHeight(defaultHeight);
 
                     currentMegre += countMegre - 1;
 
@@ -480,6 +567,7 @@ function doCrawl() {
 
                 // await wb.write("(" + cTimee.getHours() + " Gio -" + cTimee.getMinutes() + " Phut Ngay " + cTimee.getDate() + " Thang " + cTimee.getMonth() + " Nam " + cTimee.getFullYear() + ")   " + fileNametxt + ".xlsx");
 
+                console.log("end");
                 //lần chạy cuối cùng
                 await writeToFileXLSX();
 
