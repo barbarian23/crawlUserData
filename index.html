@@ -35,7 +35,7 @@
 
     <div class="div-login" id="div-login-success">
         <div class="div-login-success-contain">
-            <h4 id="success_login_text">Đăng nhập thành công ...</h4>
+            <h2 id="success_login_text">Đăng nhập thành công ...</h2>
         </div>
     </div>
 
@@ -82,6 +82,7 @@
                 // document.getElementById("success_text").style.display = 'none';
                 document.getElementById("error_crawl").innerHTML = "Tệp danh sách số điện thoại cần phải là tệp .txt";
                 document.getElementById("error_crawl").style.display = 'block';
+                document.getElementById("btn_crawl").style.display = 'flex';
                 //document.getElementById("error_text").style.display = 'none';
                 document.getElementById("span_file_input_error").style.display = 'block';
                 document.getElementById("span_file_input_error").innerHTML = "Tệp danh sách số điện thoại cần phải là tệp .txt.Bám vào đây đẻ chọn lại";
@@ -159,6 +160,7 @@
             //document.getElementById("error_crawl").style.display = 'none';
             document.getElementById("btn_crawl").style.display = 'flex';
             document.getElementById("div_delay_time").style.display = 'flex';
+            document.getElementById("error_crawl").style.display = 'none';
             document.getElementById("span_file_input_success").style.display = 'block';
             document.getElementById("span_file_input_success").innerHTML = "Tệp bạn chọn tên là '" + fileNameTXT + "'.Bấm vào đây để chọn lại tệp";
             document.getElementById("span_file_input_error").style.display = 'none';
@@ -173,6 +175,7 @@
             //document.getElementById("error_crawl").style.display = 'none';
             document.getElementById("btn_crawl").style.display = 'flex';
             document.getElementById("div_delay_time").style.display = 'flex';
+            document.getElementById("error_crawl").style.display = 'none';
             document.getElementById("span_file_input_success").style.display = 'block';
             document.getElementById("span_file_input_success").innerHTML = "Bạn mới chọn một tệp mới là '" + newFileNameTxt + "'.Bấm vào đây để chọn lại tệp";
             document.getElementById("span_file_input_error").style.display = 'none';
@@ -267,17 +270,17 @@
                 document.getElementById("error_text").innerHTML = "Sai tên đăng nhập hoặc mật khẩu";
                 document.getElementById("error_text").style.color = 'red';
                 document.getElementById("error_text").style.display = 'block';
-                document.getElementById("error_text").classList.remove('logining');
+                //document.getElementById("error_text").classList.remove('logining');
             }else if (item === -1){
                 document.getElementById("error_text").innerHTML = "Có lỗi khi đăng nhập,vui lòng thử lại";
                 document.getElementById("error_text").style.color = 'red';
                 document.getElementById("error_text").style.display = 'block';
-                document.getElementById("error_text").classList.remove('logining');
+               // document.getElementById("error_text").classList.remove('logining');
             } else if (item == 2) {
                 document.getElementById("error_text").innerHTML = "Đang đăng nhập vui lòng đợi ....";
                 document.getElementById("error_text").style.color = 'green';
                 document.getElementById("error_text").style.display = 'block';
-                document.getElementById("error_text").classList.add('logining');
+               // document.getElementById("error_text").classList.add('logining');
             }
         });
 
