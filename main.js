@@ -1,3 +1,4 @@
+
 const electron = require('electron');
 const { app, BrowserWindow, ipcMain, Menu, dialog } = electron;
 
@@ -29,6 +30,7 @@ var crawling = false;
 var fileNamexlxs = "";
 var threshHoldeCount = 10;
 var defaultHeight = 35;
+var rowSpacing = 2;
 // var USERNAME = ['dangky41'];
 // var PASSWORD = ['858382'];
 var username = "";
@@ -299,6 +301,10 @@ function writeToXcell(x, y, title) {
     // }
 }
 
+async function  writeNumberToCell(x,y,number){
+    await ws.cell(x,y).number(number).style(xlStyleSmall);
+  }
+
 function writeToXcellMerge(x1, y1, x2, y2, title) {
     //console.log("Ghi vao o ", x1, y1, "den ", x2, y2, "gia tri", title);
 
@@ -317,6 +323,12 @@ function writeToXcellMerge(x1, y1, x2, y2, title) {
     } else {
         ws.cell(x1, y1, x2, y2, true).string(title).style(xlStyleSmall).comment({ height: '50pt' });
     }
+}
+
+function convertStringToInteger(str){
+    let strArray = str.split(",");
+    let temp = strArray.reduce(function(temp1, temp2){return temp1 + temp2}, "");
+    return parseInt(temp);
 }
 
 async function prepareExxcel(callback) {
@@ -391,15 +403,16 @@ async function prepareExxcel(callback) {
     currentMegre = 0;
 
     for (let i = 0; i < header.length; i++) {
-        if (i <= 5) {
-            writeToXcellMerge(1, Number.parseInt(i) + 1, 2, Number.parseInt(i) + 1, headeTitle + "-" + header[i]);
-        }
-        else if (i == 6) {
-            writeToXcellMerge(1, 7, 1, endRange, headeTitle + "-" + header[i]);
-        }
-        else {
-            writeToXcell(2, Number.parseInt(i), headeTitle + "-" + header[i]);
-        }
+        writeToXcell(1, Number.parseInt(i)+1, headeTitle + "-" + header[i]);
+        // if (i <= 5) {
+        //     writeToXcellMerge(1, Number.parseInt(i) + 1, 2, Number.parseInt(i) + 1, headeTitle + "-" + header[i]);
+        // }
+        // else if (i == 6) {
+        //     writeToXcellMerge(1, 7, 1, endRange, headeTitle + "-" + header[i]);
+        // }
+        // else {
+        //     writeToXcell(2, Number.parseInt(i), headeTitle + "-" + header[i]);
+        // }
     }
     ws.row(1).setHeight(defaultHeight);
     startStartIndex = 0;
@@ -427,17 +440,17 @@ function doCrawl() {
                 concurentPup = null;
                 dialog.dismiss();
                 startStartIndex = cIII + 1;
-                // await writeToXcell(cIII + 3 + currentMegre, 1, startStartIndex + "");
-                // await writeToXcellMerge(cIII + 3 + currentMegre, 2, cIII + 3 + currentMegre, endRange, inputPhoneNumberArray[cIII] + " - " + wrongNumber);
-                // ws.row(cIII + 3 + currentMegre).setHeight(80);
-                await writeToXcell(cIII + 3, 1, startStartIndex + "");
-                writeToXcell(cIII + 3, 3, inputPhoneNumberArray[cIII]);
-                writeToXcell(cIII + 3, 4, "");
-                writeToXcell(cIII + 3, 5, "");
-                writeToXcell(cIII + 3, 6, "" + 0);
+                // await writeToXcell(cIII + rowSpacing + currentMegre, 1, startStartIndex + "");
+                // await writeToXcellMerge(cIII + rowSpacing + currentMegre, 2, cIII + rowSpacing + currentMegre, endRange, inputPhoneNumberArray[cIII] + " - " + wrongNumber);
+                // ws.row(cIII + rowSpacing + currentMegre).setHeight(80);
+                await writeToXcell(cIII + rowSpacing, 1, startStartIndex + "");
+                writeToXcell(cIII + rowSpacing, 3, inputPhoneNumberArray[cIII]);
+                writeToXcell(cIII + rowSpacing, 4, "");
+                writeToXcell(cIII + rowSpacing, 5, "");
+                writeToXcell(cIII + rowSpacing, 6, "" + 0);
 
-                await writeToXcell(cIII + 3, 8, wrongNumber);
-                ws.row(cIII + 3).setHeight(defaultHeight);
+                await writeToXcell(cIII + rowSpacing, 8, wrongNumber);
+                ws.row(cIII + rowSpacing).setHeight(defaultHeight);
                 await doCrawl();
             });
 
@@ -496,9 +509,9 @@ function doCrawl() {
                     itemArray.push(index + 1);
                     let currentSerrvice = "";
                     //console.log("arrayName", arrayName.length);
-                    //wait writeToXcell(index + 3 + loopMerge, 0, index + 1));
-                    await writeToXcell(index + 3, 1, (index + 1) + "");
-                    await writeToXcell(index + 3, 3, inputPhoneNumberArray[index] + "");
+                    //wait writeToXcell(index + rowSpacing + loopMerge, 0, index + 1));
+                    await writeToXcell(index + rowSpacing, 1, (index + 1) + "");
+                    await writeToXcell(index + rowSpacing, 3, inputPhoneNumberArray[index] + "");
                     for (let i = 1; i < arrayName.length; i++) {
                         if (i < 9) {
                             if (i == 8) {
@@ -508,19 +521,21 @@ function doCrawl() {
                                 if (i == 7)/*có thể không trả kết quả số tiền*/ {
                                     console.log(await (await arrayName[i].getProperty('innerHTML')).jsonValue());
                                     if (await (await arrayName[i].getProperty('innerHTML')).jsonValue() == null || await (await arrayName[i].getProperty('innerHTML')).jsonValue() == "") {
-                                        writeToXcell(index + 3, 6, 0 + "");
+                                        // writeToXcell(index + rowSpacing, 6, 0 + "");
+                                        writeNumberToCell(index + rowSpacing, 6, null);
                                     }
                                     else {
-                                        writeToXcell(index + 3, 6, await (await arrayName[i].getProperty('innerHTML')).jsonValue());
+                                        var value = await (await arrayName[i].getProperty('innerHTML')).jsonValue()
+                                        writeNumberToCell(index + rowSpacing, 6, convertStringToInteger(value));
                                     }
                                     itemArray.push(0);
                                     userInfoCollumn++;
                                 } else if (i == 1) {//họ và tên
                                     itemArray.push(await (await arrayName[i].getProperty('innerHTML')).jsonValue());
-                                    writeToXcell(index + 3, 2, await (await arrayName[i].getProperty('innerHTML')).jsonValue());
+                                    writeToXcell(index + rowSpacing, 2, await (await arrayName[i].getProperty('innerHTML')).jsonValue());
                                 }
                                 else {
-                                    writeToXcell(index + 3, userInfoCollumn, await (await arrayName[i].getProperty('innerHTML')).jsonValue());
+                                    writeToXcell(index + rowSpacing, userInfoCollumn, await (await arrayName[i].getProperty('innerHTML')).jsonValue());
                                     itemArray.push(await (await arrayName[i].getProperty('innerHTML')).jsonValue());
                                     userInfoCollumn++;
                                 }
@@ -528,8 +543,8 @@ function doCrawl() {
                         } else {
                             bodyFileTrCountMoreThan6++;
                             newcolumn++;
-                            //await writeToXcell(index + 3 + loopMerge, newcolumn, await (await arrayName[i].getProperty('innerHTML')).jsonValue());
-                            await writeToXcell(index + 3, newcolumn, await (await arrayName[i].getProperty('innerHTML')).jsonValue());
+                            //await writeToXcell(index + rowSpacing + loopMerge, newcolumn, await (await arrayName[i].getProperty('innerHTML')).jsonValue());
+                            await writeToXcell(index + rowSpacing, newcolumn, await (await arrayName[i].getProperty('innerHTML')).jsonValue());
                             currentSerrvice += "add";
                             if (bodyFileTrCountMoreThan6 + 1 === serviceRange) {
                                 break;
@@ -546,18 +561,18 @@ function doCrawl() {
 
                     if (currentSerrvice == "") {
                         currentSerrvice = noService;
-                        //await writeToXcellMerge(index + 3 + currentMegre, 7, index + 3 + currentMegre, 12, currentSerrvice);
-                        //await writeToXcellMerge(index + 3, 7, index + 3, endRange, currentSerrvice);
-                        await writeToXcell(index + 3, 8, currentSerrvice);
+                        //await writeToXcellMerge(index + rowSpacing + currentMegre, 7, index + rowSpacing + currentMegre, 12, currentSerrvice);
+                        //await writeToXcellMerge(index + rowSpacing, 7, index + rowSpacing, endRange, currentSerrvice);
+                        await writeToXcell(index + rowSpacing, 8, currentSerrvice);
                         //countMegre = 1;
                     }
                     //ghi thoong tin
                     // for (let i = 0; i < itemArray.length; i++) {
-                    //await writeToXcellMerge(index + 3 + currentMegre, Number.parseInt(i + 1), index + 3 + currentMegre + countMegre - 1, Number.parseInt(i + 1), typeof itemArray[i] == "number" ? itemArray[i] + "" : itemArray[i]);
+                    //await writeToXcellMerge(index + rowSpacing + currentMegre, Number.parseInt(i + 1), index + rowSpacing + currentMegre + countMegre - 1, Number.parseInt(i + 1), typeof itemArray[i] == "number" ? itemArray[i] + "" : itemArray[i]);
                     //}
 
-                    //ws.row(index + 3 + currentMegre).setHeight(50);
-                    ws.row(index + 3).setHeight(defaultHeight);
+                    //ws.row(index + rowSpacing + currentMegre).setHeight(50);
+                    ws.row(index + rowSpacing).setHeight(defaultHeight);
 
                     currentMegre += countMegre - 1;
 
@@ -616,4 +631,3 @@ async function asyncForEach(array, startIndex, callback) {
         }
     }
 }
-
